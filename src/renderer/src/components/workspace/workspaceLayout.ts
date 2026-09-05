@@ -1,5 +1,5 @@
 // The main workspace arrangement: which panels are showing and how big the
-// two resizable regions (the pipeline sidebar, the terminal/logs dock) are.
+// two resizable regions (the pipeline sidebar, the terminal/AI/logs dock) are.
 //
 // This is a per-browser preference, not view state, so it lives in
 // localStorage rather than component state that resets on remount — a reader
@@ -9,14 +9,14 @@
 // Deliberately no React here: the clamping/parsing rules are what's worth
 // getting right, and they don't need a DOM to exercise.
 
-export type DockTab = 'terminal' | 'logs'
+export type DockTab = 'terminal' | 'ai' | 'logs'
 
 export interface WorkspaceLayout {
   sidebarVisible: boolean
   dockVisible: boolean
   /** Pipeline sidebar width in px. */
   sidebarWidth: number
-  /** Terminal/logs dock height in px. */
+  /** Terminal/AI/logs dock height in px. */
   dockHeight: number
   dockTab: DockTab
 }
@@ -61,7 +61,7 @@ export function clampDockHeight(height: number, available?: number): number {
 }
 
 function isDockTab(value: unknown): value is DockTab {
-  return value === 'terminal' || value === 'logs'
+  return value === 'terminal' || value === 'ai' || value === 'logs'
 }
 
 /**
