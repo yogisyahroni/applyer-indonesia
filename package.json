@@ -99,8 +99,7 @@
       "!**/node_modules/@napi-rs/canvas*/**"
     ],
     "electronLanguages": [
-      "en-US",
-      "id"
+      "en-US"
     ],
     "asar": true,
     "asarUnpack": [
