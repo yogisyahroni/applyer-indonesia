@@ -39,26 +39,25 @@ export interface ProfileWithDocuments {
 }
 
 /**
- * The all-empty profile. Canonical here rather than in the renderer store
- * because both sides need it: the store falls back to it before the first
- * fetch, and `update_profile` merges the agent's partial update onto it
- * when no profile row exists yet.
+ * Canonical initial profile for the Indonesia distribution. Personal fields
+ * stay empty, while country/currency defaults remove repetitive onboarding
+ * work and align with the Indonesia-only search policy.
  */
 export const EMPTY_PROFILE: ProfileFields = {
   fullName: '',
   email: '',
   phone: '',
-  location: '',
+  location: 'Indonesia',
   linkedinUrl: '',
   githubUrl: '',
   portfolioUrl: '',
   workAuthorization: '',
   desiredRoles: [],
-  desiredLocations: [],
+  desiredLocations: ['Indonesia'],
   remotePreference: 'no_preference',
   salaryMin: null,
   salaryMax: null,
-  salaryCurrency: 'USD',
+  salaryCurrency: 'IDR',
   yearsExperience: null,
   summary: '',
   skills: []
