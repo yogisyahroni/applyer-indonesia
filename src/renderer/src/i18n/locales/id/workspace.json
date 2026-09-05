@@ -39,7 +39,8 @@
   "dock": {
     "terminal": "Terminal",
     "logs": "Log Aktivitas",
-    "hide": "Sembunyikan dock"
+    "hide": "Sembunyikan dock",
+    "ai": "AI Agent"
   },
   "rail": {
     "jobBoard": "Papan Lowongan",
@@ -101,5 +102,20 @@
     "app.toggleSettings": "Buka/tutup pengaturan"
   },
   "resizeOverview": "Ubah ukuran panel ringkasan",
-  "resizeDock": "Ubah ukuran dock konsol"
+  "resizeDock": "Ubah ukuran dock konsol",
+  "ai": {
+    "loading": "Memuat konfigurasi AI…",
+    "cliTitle": "Direct AI belum aktif",
+    "cliDescription": "Mode AI utama masih Agent CLI / MCP. Pakai tab Terminal, atau ubah mode AI di Pengaturan → Agent.",
+    "agentTitle": "Direct AI Agent",
+    "compatible": "Kompatibel OpenAI",
+    "keyMissing": "API key belum dikonfigurasi",
+    "result": "Hasil",
+    "error": "Error",
+    "toolTrace": "Aktivitas tool",
+    "empty": "Kasih instruksi ke agent di bawah. Agent bisa mencari lowongan, membaca detail, mengantrekan yang cocok, dan menyiapkan form lewat tool Applyer yang sama dengan MCP.",
+    "promptPlaceholder": "Contoh: Cari lowongan backend di Jakarta dari JobStreet lalu antrekan yang cocok…",
+    "run": "Jalankan",
+    "safety": "Lamaran tidak pernah dikirim otomatis. Login, CAPTCHA, verifikasi, dan Submit akhir tetap dilakukan manusia."
+  }
 }

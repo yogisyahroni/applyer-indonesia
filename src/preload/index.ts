@@ -39,6 +39,7 @@ import type {
 } from '@shared/types/companyBoard'
 import type { AppError } from '@shared/types/errorCodes'
 import type { AccountConnectionStatus, AccountProvider } from '@shared/types/accountConnection'
+import type { AiAgentRunResult, AiConfigSnapshot, AiConfigUpdate, AiConnectionTestResult } from '@shared/types/ai'
 
 /**
  * A successful add reports more than "it worked": whether the board was
@@ -269,6 +270,18 @@ const accountConnectionsApi = {
     ipcRenderer.invoke(IPC.accountConnections.disconnect, { provider })
 }
 
+const aiApi = {
+  getConfig: (): Promise<AiConfigSnapshot> => ipcRenderer.invoke(IPC.ai.getConfig),
+  saveConfig: (
+    config: AiConfigUpdate
+  ): Promise<{ ok: true; config: AiConfigSnapshot } | { ok: false; error: string }> =>
+    ipcRenderer.invoke(IPC.ai.saveConfig, config),
+  clearApiKey: (): Promise<{ ok: true; config: AiConfigSnapshot } | { ok: false; error: string }> =>
+    ipcRenderer.invoke(IPC.ai.clearApiKey),
+  testConnection: (): Promise<AiConnectionTestResult> => ipcRenderer.invoke(IPC.ai.testConnection),
+  runTask: (prompt: string): Promise<AiAgentRunResult> => ipcRenderer.invoke(IPC.ai.runTask, { prompt })
+}
+
 const browserControlApi = {
   resumeTask: (taskId: string): Promise<{ ok: boolean; error?: string }> =>
     ipcRenderer.invoke(IPC.browserControl.resumeTask, { taskId }),
@@ -397,6 +410,7 @@ const api = {
   profile: profileApi,
   onboarding: onboardingApi,
   accountConnections: accountConnectionsApi,
+  ai: aiApi,
   browserControl: browserControlApi,
   browserSetup: browserSetupApi,
   settings: settingsApi,

@@ -41,7 +41,8 @@
   "dock": {
     "terminal": "Terminal",
     "logs": "Activity Log",
-    "hide": "Hide dock"
+    "hide": "Hide dock",
+    "ai": "AI Agent"
   },
   "rail": {
     "jobBoard": "Job Board",
@@ -105,5 +106,20 @@
     "app.toggleSettings": "Open/close settings"
   },
   "resizeOverview": "Resize overview panel",
-  "resizeDock": "Resize console dock"
+  "resizeDock": "Resize console dock",
+  "ai": {
+    "loading": "Loading AI configuration…",
+    "cliTitle": "Direct AI is not active",
+    "cliDescription": "Primary AI mode is Agent CLI / MCP. Use the Terminal tab, or switch the AI mode in Settings → Agent.",
+    "agentTitle": "Direct AI Agent",
+    "compatible": "OpenAI-compatible",
+    "keyMissing": "API key not configured",
+    "result": "Result",
+    "error": "Error",
+    "toolTrace": "Tool activity",
+    "empty": "Give the agent an instruction below. It can search jobs, inspect details, queue matches, and prepare forms using the same Applyer tools as MCP.",
+    "promptPlaceholder": "Example: Find backend roles in Jakarta on JobStreet and queue good matches…",
+    "run": "Run",
+    "safety": "Applications are never auto-submitted. Login, CAPTCHA, verification, and final submission remain human-controlled."
+  }
 }
