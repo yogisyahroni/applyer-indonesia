@@ -5,11 +5,14 @@ import { AI_TOOLS, aiToolJsonSchema, callToolResultToText, getAiTool } from './t
 import {
   anthropicMessage,
   openAiChat,
+  openAiResponse,
   type AnthropicBlock,
   type AnthropicMessage,
   type AnthropicToolResultBlock,
   type AnthropicToolSpec,
+  type OpenAiFunctionCallOutput,
   type OpenAiMessage,
+  type OpenAiResponsesToolSpec,
   type OpenAiToolSpec,
   type ResolvedProviderConfig
 } from './providerClient'
@@ -53,7 +56,7 @@ async function executeTool(name: string, input: unknown, trace: AiToolTrace[]): 
   }
 }
 
-function openAiTools(): OpenAiToolSpec[] {
+function compatibleChatTools(): OpenAiToolSpec[] {
   return AI_TOOLS.map((tool) => ({
     type: 'function',
     function: {
@@ -61,6 +64,15 @@ function openAiTools(): OpenAiToolSpec[] {
       description: tool.description,
       parameters: aiToolJsonSchema(tool)
     }
+  }))
+}
+
+function nativeOpenAiTools(): OpenAiResponsesToolSpec[] {
+  return AI_TOOLS.map((tool) => ({
+    type: 'function',
+    name: tool.name,
+    description: tool.description,
+    parameters: aiToolJsonSchema(tool)
   }))
 }
 
@@ -81,18 +93,52 @@ function parseToolArguments(raw: string): unknown {
   }
 }
 
+/** OpenAI's native provider path uses the Responses API and previous_response_id for tool turns. */
+async function runNativeOpenAi(
+  config: ResolvedProviderConfig,
+  prompt: string,
+  trace: AiToolTrace[]
+): Promise<string> {
+  const tools = nativeOpenAiTools()
+  let previousResponseId: string | undefined
+  let input: string | OpenAiFunctionCallOutput[] = prompt
+
+  for (let step = 0; step < MAX_AGENT_STEPS; step += 1) {
+    const turn = await openAiResponse(config, SYSTEM_PROMPT, input, tools, previousResponseId)
+    if (turn.functionCalls.length === 0) return turn.text || 'Done.'
+
+    const outputs: OpenAiFunctionCallOutput[] = []
+    for (const call of turn.functionCalls) {
+      let output: string
+      try {
+        const args = parseToolArguments(call.arguments)
+        output = await executeTool(call.name, args, trace)
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        trace.push({ name: call.name, ok: false, summary: message })
+        output = message
+      }
+      outputs.push({ type: 'function_call_output', call_id: call.callId, output })
+    }
+
+    previousResponseId = turn.id
+    input = outputs
+  }
+
+  throw new Error(`AI agent exceeded ${MAX_AGENT_STEPS} tool-calling steps.`)
+}
+
+/** Broad compatibility path for LM Studio, vLLM and hosted OpenAI-compatible endpoints. */
 async function runOpenAiCompatible(
   config: ResolvedProviderConfig,
   prompt: string,
   trace: AiToolTrace[]
 ): Promise<string> {
-  if (config.mode === 'openai' && !config.apiKey) throw new Error('OpenAI API requires an API key.')
-
   const messages: OpenAiMessage[] = [
     { role: 'system', content: SYSTEM_PROMPT },
     { role: 'user', content: prompt }
   ]
-  const tools = openAiTools()
+  const tools = compatibleChatTools()
 
   for (let step = 0; step < MAX_AGENT_STEPS; step += 1) {
     const assistant = await openAiChat(config, messages, tools)
@@ -101,16 +147,16 @@ async function runOpenAiCompatible(
     if (calls.length === 0) return assistant.content?.trim() || 'Done.'
 
     for (const call of calls) {
-      let input: unknown = {}
+      let inputArgs: unknown = {}
       try {
-        input = parseToolArguments(call.function.arguments)
+        inputArgs = parseToolArguments(call.function.arguments)
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
         trace.push({ name: call.function.name, ok: false, summary: message })
         messages.push({ role: 'tool', tool_call_id: call.id, content: message })
         continue
       }
-      const output = await executeTool(call.function.name, input, trace)
+      const output = await executeTool(call.function.name, inputArgs, trace)
       messages.push({ role: 'tool', tool_call_id: call.id, content: output })
     }
   }
@@ -171,7 +217,9 @@ export async function runAiAgentTask(prompt: string): Promise<AiAgentRunResult> 
     const output =
       config.mode === 'anthropic'
         ? await runAnthropic(config, trimmed, trace)
-        : await runOpenAiCompatible(config, trimmed, trace)
+        : config.mode === 'openai'
+          ? await runNativeOpenAi(config, trimmed, trace)
+          : await runOpenAiCompatible(config, trimmed, trace)
     logActivity('info', `Direct AI agent completed with ${trace.length} tool call(s)`)
     return { success: true, output, toolTrace: trace }
   } catch (error) {
