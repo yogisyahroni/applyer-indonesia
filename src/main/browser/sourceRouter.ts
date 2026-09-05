@@ -1,4 +1,12 @@
-export type JobSource = 'greenhouse' | 'lever' | 'ashby' | 'workday' | 'linkedin' | 'indeed' | 'generic'
+export type JobSource =
+  | 'greenhouse'
+  | 'lever'
+  | 'ashby'
+  | 'workday'
+  | 'linkedin'
+  | 'indeed'
+  | 'jobstreet'
+  | 'generic'
 
 export function detectSource(url: string): JobSource {
   let hostname: string
@@ -23,8 +31,11 @@ export function detectSource(url: string): JobSource {
   if (hostname === 'www.linkedin.com' || hostname === 'linkedin.com') {
     return 'linkedin'
   }
-  if (hostname === 'www.indeed.com' || hostname === 'indeed.com') {
+  if (hostname === 'www.indeed.com' || hostname === 'indeed.com' || hostname === 'id.indeed.com') {
     return 'indeed'
+  }
+  if (hostname === 'id.jobstreet.com' || hostname === 'www.jobstreet.co.id' || hostname === 'jobstreet.co.id') {
+    return 'jobstreet'
   }
   return 'generic'
 }

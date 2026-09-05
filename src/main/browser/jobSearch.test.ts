@@ -2,11 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const searchIndeed = vi.fn()
 const searchLinkedIn = vi.fn()
+const searchJobStreet = vi.fn()
 const searchAtsBoards = vi.fn()
 const isUrlExcluded = vi.fn()
 
 vi.mock('./scrapers/indeed', () => ({ searchIndeed: (...args: unknown[]) => searchIndeed(...args) }))
 vi.mock('./scrapers/linkedin', () => ({ searchLinkedIn: (...args: unknown[]) => searchLinkedIn(...args) }))
+vi.mock('./scrapers/jobstreet', () => ({ searchJobStreet: (...args: unknown[]) => searchJobStreet(...args) }))
 vi.mock('./ats/searchAtsBoards', () => ({ searchAtsBoards: (...args: unknown[]) => searchAtsBoards(...args) }))
 vi.mock('../db/repositories/jobExclusionsRepository', () => ({
   isUrlExcluded: (...args: unknown[]) => isUrlExcluded(...args)
@@ -23,6 +25,7 @@ function result(url: string, source: JobSource = 'indeed', overrides: Partial<Jo
 beforeEach(() => {
   searchIndeed.mockReset().mockResolvedValue({ results: [], blocked: false })
   searchLinkedIn.mockReset().mockResolvedValue({ results: [], blocked: false })
+  searchJobStreet.mockReset().mockResolvedValue({ results: [], blocked: false })
   searchAtsBoards
     .mockReset()
     .mockResolvedValue({ results: [], warnings: [], searchedBoards: 0, searchedProviders: [] })
@@ -30,8 +33,9 @@ beforeEach(() => {
 })
 
 describe('searchJobs', () => {
-  it('searches the aggregators and the tracked company boards when no sources are given', async () => {
+  it('searches JobStreet, the global aggregators and tracked company boards when no sources are given', async () => {
     await searchJobs({ query: 'engineer', limit: 20 })
+    expect(searchJobStreet).toHaveBeenCalledWith('engineer', undefined, 20)
     expect(searchIndeed).toHaveBeenCalledWith('engineer', undefined, 20)
     expect(searchLinkedIn).toHaveBeenCalledWith('engineer', undefined, 20)
     expect(searchAtsBoards).toHaveBeenCalledWith({
@@ -46,7 +50,19 @@ describe('searchJobs', () => {
     await searchJobs({ query: 'engineer', sources: ['indeed'], limit: 20 })
     expect(searchIndeed).toHaveBeenCalled()
     expect(searchLinkedIn).not.toHaveBeenCalled()
+    expect(searchJobStreet).not.toHaveBeenCalled()
     expect(searchAtsBoards).not.toHaveBeenCalled()
+  })
+
+  it('can search JobStreet explicitly', async () => {
+    searchJobStreet.mockResolvedValue({
+      results: [result('https://id.jobstreet.com/id/job/123', 'jobstreet')],
+      blocked: false
+    })
+    const outcome = await searchJobs({ query: 'engineer', sources: ['jobstreet'], location: 'Jakarta', limit: 20 })
+    expect(searchJobStreet).toHaveBeenCalledWith('engineer', 'Jakarta', 20)
+    expect(outcome.results.map((r) => r.source)).toEqual(['jobstreet'])
+    expect(outcome.searchedSources).toEqual(['jobstreet'])
   })
 
   it('narrows the board search to the ATS providers that were asked for', async () => {
@@ -105,8 +121,6 @@ describe('searchJobs', () => {
   })
 
   it("drops an aggregator's copy of a posting already found on the company's own board", async () => {
-    // The two rows are the same job with different URLs and no shared id, so
-    // company + title + location is the only thing linking them.
     searchAtsBoards.mockResolvedValue({
       results: [
         result('https://job-boards.greenhouse.io/acme/jobs/1', 'greenhouse', {
@@ -144,6 +158,17 @@ describe('searchJobs', () => {
 
     const outcome = await searchJobs({ query: 'engineer', limit: 20 })
     expect(outcome.results).toHaveLength(2)
+  })
+
+  it('puts JobStreet ahead of the global aggregators inside the broad-search lane', async () => {
+    searchJobStreet.mockResolvedValue({
+      results: [result('https://id.jobstreet.com/id/job/1', 'jobstreet', { title: 'ID' })],
+      blocked: false
+    })
+    searchIndeed.mockResolvedValue({ results: [result('https://indeed.com/1', 'indeed', { title: 'IN' })], blocked: false })
+    searchLinkedIn.mockResolvedValue({ results: [result('https://linkedin.com/1', 'linkedin', { title: 'LI' })], blocked: false })
+    const outcome = await searchJobs({ query: 'engineer', sources: ['jobstreet', 'indeed', 'linkedin'], limit: 20 })
+    expect(outcome.results.map((r) => r.source)).toEqual(['jobstreet', 'indeed', 'linkedin'])
   })
 
   it('interleaves board and aggregator results so neither fills the whole page', async () => {

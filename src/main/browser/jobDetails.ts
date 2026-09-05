@@ -4,6 +4,7 @@ import { fetchLeverJobDetails } from './scrapers/lever'
 import { fetchAshbyJobDetails } from './scrapers/ashby'
 import { fetchIndeedJobDetails } from './scrapers/indeed'
 import { fetchLinkedInJobDetails } from './scrapers/linkedin'
+import { fetchJobStreetJobDetails } from './scrapers/jobstreet'
 import { fetchWorkdayJobDetails } from './scrapers/workday'
 import { fetchGenericJobDetails } from './scrapers/generic'
 import type { JobDetailsOutcome } from './types'
@@ -21,6 +22,8 @@ export async function fetchJobDetails(url: string): Promise<JobDetailsOutcome> {
       return fetchIndeedJobDetails(url)
     case 'linkedin':
       return fetchLinkedInJobDetails(url)
+    case 'jobstreet':
+      return fetchJobStreetJobDetails(url)
     case 'workday':
       return fetchWorkdayJobDetails(url)
     case 'generic':

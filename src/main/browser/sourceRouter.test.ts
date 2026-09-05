@@ -14,8 +14,11 @@ describe('detectSource', () => {
     ['https://www.linkedin.com/jobs/view/123', 'linkedin'],
     ['https://linkedin.com/jobs/view/123', 'linkedin'],
     ['https://www.indeed.com/viewjob?jk=abc', 'indeed'],
-    ['https://indeed.com/viewjob?jk=abc', 'indeed'],
+    ['https://id.indeed.com/viewjob?jk=abc', 'indeed'],
+    ['https://id.jobstreet.com/id/job/93747083', 'jobstreet'],
+    ['https://www.jobstreet.co.id/id/job/123', 'jobstreet'],
     ['https://example.com/careers/123', 'generic'],
+    ['https://id.jobstreet.com.evil.com/id/job/123', 'generic'],
     ['https://boards.greenhouse.io.evil.com/acme/jobs/123', 'generic']
   ] as const)('classifies %s as %s', (url, expected) => {
     expect(detectSource(url)).toBe(expected)
@@ -28,22 +31,17 @@ describe('detectSource', () => {
 
   it('is case-insensitive on hostname', () => {
     expect(detectSource('https://BOARDS.GREENHOUSE.IO/acme/jobs/123')).toBe('greenhouse')
+    expect(detectSource('https://ID.JOBSTREET.COM/id/job/123')).toBe('jobstreet')
   })
 })
 
 describe('parseGreenhouseUrl', () => {
   it('extracts token and numeric job id', () => {
-    expect(parseGreenhouseUrl('https://boards.greenhouse.io/acme/jobs/123456')).toEqual({
-      token: 'acme',
-      jobId: '123456'
-    })
+    expect(parseGreenhouseUrl('https://boards.greenhouse.io/acme/jobs/123456')).toEqual({ token: 'acme', jobId: '123456' })
   })
 
   it('works for the job-boards.* variant', () => {
-    expect(parseGreenhouseUrl('https://job-boards.greenhouse.io/acme/jobs/999')).toEqual({
-      token: 'acme',
-      jobId: '999'
-    })
+    expect(parseGreenhouseUrl('https://job-boards.greenhouse.io/acme/jobs/999')).toEqual({ token: 'acme', jobId: '999' })
   })
 
   it('returns null when the path does not match', () => {
@@ -52,10 +50,7 @@ describe('parseGreenhouseUrl', () => {
   })
 
   it('ignores query strings and trailing path segments', () => {
-    expect(parseGreenhouseUrl('https://boards.greenhouse.io/acme/jobs/123?gh_src=x')).toEqual({
-      token: 'acme',
-      jobId: '123'
-    })
+    expect(parseGreenhouseUrl('https://boards.greenhouse.io/acme/jobs/123?gh_src=x')).toEqual({ token: 'acme', jobId: '123' })
   })
 })
 

@@ -7,7 +7,7 @@ import { getSettings } from '@shared/settings'
 
 const settings = getSettings()
 
-const jobSourceEnum = z.enum(['greenhouse', 'lever', 'ashby', 'workday', 'linkedin', 'indeed', 'generic'])
+const jobSourceEnum = z.enum(['greenhouse', 'lever', 'ashby', 'workday', 'linkedin', 'indeed', 'jobstreet', 'generic'])
 const jobStatusEnum = z.enum(['queued', 'filled', 'submitted', 'failed'])
 const remotePreferenceEnum = z.enum(['remote', 'hybrid', 'onsite', 'no_preference'])
 
@@ -53,13 +53,6 @@ export const flagFailureShape = {
 
 export const getProfileShape = {}
 
-/**
- * Every field is optional because `update_profile` merges onto the stored
- * profile rather than replacing it: an agent that only learned the
- * candidate's skills from a resume must not blank out the salary
- * expectations they typed into the app. Limits mirror the renderer-side
- * schema in `main/ipc/profile.ts` — same row, second door in.
- */
 export const updateProfileShape = {
   fullName: z.string().trim().max(200).optional(),
   email: z.union([z.literal(''), z.string().trim().email()]).optional(),
@@ -93,19 +86,6 @@ export const excludeJobShape = {
 
 const atsProviderEnum = z.enum(['greenhouse', 'lever', 'ashby', 'workday'])
 
-/**
- * `company` carries whatever the agent has — a name, a domain, or a board
- * URL — and the app resolves it. `provider` + `token` skip that resolution
- * for an agent that already knows the exact slug.
- *
- * `provider` alone is the third, and commonest, thing a web search actually
- * establishes: which ATS a company's careers page points at, without the
- * slug. That is kept as a *preference* — every provider is still probed, and
- * one holding postings still outranks the preferred one — which is the rule
- * an ATS migration needs, since the abandoned board answers too. A `token`
- * with no `provider` remains an error: it doesn't say which API to ask (this
- * shape is a field map, so the tool checks that itself).
- */
 export const addCompanyBoardShape = {
   company: z.string().trim().min(1).max(200),
   provider: atsProviderEnum.optional(),
