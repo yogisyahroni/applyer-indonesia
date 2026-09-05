@@ -11,13 +11,15 @@ const jobSourceEnum = z.enum(['greenhouse', 'lever', 'ashby', 'workday', 'linked
 const jobStatusEnum = z.enum(['queued', 'filled', 'submitted', 'failed'])
 const remotePreferenceEnum = z.enum(['remote', 'hybrid', 'onsite', 'no_preference'])
 
+const indonesiaDefaultSources = ['jobstreet', 'indeed', 'linkedin', 'greenhouse', 'lever', 'ashby', 'workday'] as const
+
 export const searchJobsShape = {
   query: z.string().trim().min(1).max(200),
   location: z.string().trim().max(200).optional(),
   remote: z.boolean().optional(),
   jobType: z.enum(['full_time', 'part_time', 'contract', 'internship']).optional(),
-  sources: z.array(jobSourceEnum).optional(),
-  indonesiaOnly: z.boolean().optional(),
+  sources: z.array(jobSourceEnum).optional().default([...indonesiaDefaultSources]),
+  indonesiaOnly: z.boolean().optional().default(true),
   limit: z.number().int().min(1).max(SEARCH_JOBS_MAX_LIMIT).optional()
 }
 
@@ -73,8 +75,8 @@ export const updateProfileShape = {
   desiredRoles: z.array(z.string().trim().max(100)).max(20).optional(),
   desiredLocations: z.array(z.string().trim().max(200)).max(20).optional(),
   remotePreference: remotePreferenceEnum.optional(),
-  salaryMin: z.number().int().min(0).max(10_000_000).nullable().optional(),
-  salaryMax: z.number().int().min(0).max(10_000_000).nullable().optional(),
+  salaryMin: z.number().int().min(0).max(10_000_000_000).nullable().optional(),
+  salaryMax: z.number().int().min(0).max(10_000_000_000).nullable().optional(),
   salaryCurrency: z.string().trim().max(10).optional(),
   yearsExperience: z.number().int().min(0).max(80).nullable().optional(),
   summary: z.string().trim().max(5000).optional(),
