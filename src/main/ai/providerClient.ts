@@ -9,6 +9,7 @@ export interface ResolvedProviderConfig {
   apiKey: string | null
 }
 
+/** OpenAI-compatible Chat Completions types, used for custom/local endpoints. */
 export interface OpenAiToolCall {
   id: string
   type: 'function'
@@ -38,9 +39,43 @@ export interface OpenAiToolSpec {
   }
 }
 
-interface OpenAiResponse {
+interface OpenAiChatResponse {
   choices?: Array<{ message?: OpenAiAssistantMessage }>
   error?: { message?: string }
+}
+
+/** Native OpenAI Responses API types. */
+export interface OpenAiResponsesToolSpec {
+  type: 'function'
+  name: string
+  description: string
+  parameters: Record<string, unknown>
+}
+
+export interface OpenAiResponseFunctionCall {
+  type: 'function_call'
+  callId: string
+  name: string
+  arguments: string
+}
+
+export interface OpenAiFunctionCallOutput {
+  type: 'function_call_output'
+  call_id: string
+  output: string
+}
+
+interface OpenAiResponsesResponse {
+  id?: string
+  output?: unknown[]
+  output_text?: string
+  error?: { message?: string }
+}
+
+export interface OpenAiResponseTurn {
+  id: string
+  text: string
+  functionCalls: OpenAiResponseFunctionCall[]
 }
 
 export interface AnthropicTextBlock {
@@ -112,6 +147,11 @@ function bearerHeaders(apiKey: string | null): Record<string, string> {
   return apiKey ? { Authorization: `Bearer ${apiKey}` } : {}
 }
 
+/**
+ * Chat Completions is deliberately kept for OpenAI-compatible endpoints:
+ * LM Studio, vLLM and many hosted compatible providers expose this surface
+ * even when they do not implement OpenAI's native Responses API.
+ */
 export async function openAiChat(
   config: ResolvedProviderConfig,
   messages: OpenAiMessage[],
@@ -128,7 +168,7 @@ export async function openAiChat(
     payload.tool_choice = 'auto'
   }
 
-  const data = await fetchJson<OpenAiResponse>(`${config.baseUrl}/chat/completions`, {
+  const data = await fetchJson<OpenAiChatResponse>(`${config.baseUrl}/chat/completions`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
@@ -139,6 +179,78 @@ export async function openAiChat(
   const message = data.choices?.[0]?.message
   if (!message) throw new Error(data.error?.message || 'AI provider returned no assistant message.')
   return message
+}
+
+function parseResponsesOutput(data: OpenAiResponsesResponse): OpenAiResponseTurn {
+  if (!data.id) throw new Error(data.error?.message || 'OpenAI Responses API returned no response ID.')
+  const functionCalls: OpenAiResponseFunctionCall[] = []
+  const textParts: string[] = []
+
+  for (const item of data.output ?? []) {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) continue
+    const record = item as Record<string, unknown>
+    if (
+      record.type === 'function_call' &&
+      typeof record.call_id === 'string' &&
+      typeof record.name === 'string' &&
+      typeof record.arguments === 'string'
+    ) {
+      functionCalls.push({
+        type: 'function_call',
+        callId: record.call_id,
+        name: record.name,
+        arguments: record.arguments
+      })
+      continue
+    }
+
+    if (record.type !== 'message' || !Array.isArray(record.content)) continue
+    for (const part of record.content) {
+      if (!part || typeof part !== 'object' || Array.isArray(part)) continue
+      const content = part as Record<string, unknown>
+      if (content.type === 'output_text' && typeof content.text === 'string') textParts.push(content.text)
+    }
+  }
+
+  const topLevelText = typeof data.output_text === 'string' ? data.output_text : ''
+  return {
+    id: data.id,
+    text: (topLevelText || textParts.join('\n')).trim(),
+    functionCalls
+  }
+}
+
+/** Native OpenAI provider path. Current OpenAI models are driven through the Responses API. */
+export async function openAiResponse(
+  config: ResolvedProviderConfig,
+  instructions: string,
+  input: string | OpenAiFunctionCallOutput[],
+  tools?: OpenAiResponsesToolSpec[],
+  previousResponseId?: string,
+  maxOutputTokens = 1200
+): Promise<OpenAiResponseTurn> {
+  if (!config.apiKey) throw new Error('OpenAI API requires an API key.')
+  const payload: Record<string, unknown> = {
+    model: config.model,
+    instructions,
+    input,
+    max_output_tokens: maxOutputTokens
+  }
+  if (previousResponseId) payload.previous_response_id = previousResponseId
+  if (tools?.length) {
+    payload.tools = tools
+    payload.tool_choice = 'auto'
+  }
+
+  const data = await fetchJson<OpenAiResponsesResponse>(`${config.baseUrl}/responses`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      ...bearerHeaders(config.apiKey)
+    },
+    body: JSON.stringify(payload)
+  })
+  return parseResponsesOutput(data)
 }
 
 export async function anthropicMessage(
