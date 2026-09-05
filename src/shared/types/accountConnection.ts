@@ -21,7 +21,7 @@ export const ACCOUNT_PROVIDER_META: Record<AccountProvider, AccountProviderMeta>
   jobstreet: {
     provider: 'jobstreet',
     label: 'JobStreet',
-    loginUrl: 'https://id.jobstreet.com/oauth/login',
+    loginUrl: 'https://id.jobstreet.com/id/oauth/login',
     requiresSessionForPlatformApply: true
   },
   linkedin: {
@@ -66,7 +66,7 @@ export function isAccountLoginUrl(provider: AccountProvider, url: string): boole
   const path = parsed.pathname.toLowerCase()
 
   if (provider === 'jobstreet') {
-    return (host === 'id.jobstreet.com' || host.endsWith('.jobstreet.com')) && path.startsWith('/oauth/login')
+    return (host === 'id.jobstreet.com' || host.endsWith('.jobstreet.com')) && path.endsWith('/oauth/login')
   }
   if (provider === 'linkedin') {
     return (host === 'linkedin.com' || host.endsWith('.linkedin.com')) &&
