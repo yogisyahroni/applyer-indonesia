@@ -2,8 +2,8 @@ import type { ReactElement, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import Tooltip from './Tooltip'
 import { isMacPlatform } from '../../shortcuts/keyCombo'
-import { isNarrowedEmpty } from './dataTable'
-import type { SortDir } from './dataTable'
+import { isNarrowedEmpty } from './tableData'
+import type { SortDir } from './tableData'
 import type { SelectionModifiers } from './rowSelection'
 
 // Shared table shell for every data grid in the app (company boards, indexed
