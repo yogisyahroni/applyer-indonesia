@@ -1,18 +1,17 @@
 import type { ReactElement } from 'react'
 import { useTranslation } from 'react-i18next'
 import TerminalGroup from '../terminal/TerminalGroup'
+import AiAgentPanel from '../ai/AiAgentPanel'
 import LogsPage from '../../pages/Logs/LogsPage'
 import type { DockTab } from './workspaceLayout'
 
-const TAB_IDS: DockTab[] = ['terminal', 'logs']
+const TAB_IDS: DockTab[] = ['terminal', 'ai', 'logs']
 
 /**
- * The bottom dock: terminal (itself a `TerminalGroup` of one or more
- * concurrent sessions) and activity log as tabs of one height-constrained
- * region rather than two full pages, since only one is being read at a time.
- * Both stay mounted across tab switches (CSS visibility, not conditional
- * render) — each terminal owns a live pty session that a remount would kill,
- * and keeping Logs alongside it means switching back doesn't re-fetch.
+ * The bottom dock: terminal, direct AI agent, and activity log as tabs of one
+ * height-constrained region rather than separate full pages. All stay mounted
+ * across tab switches (CSS visibility, not conditional render) so terminal
+ * PTY sessions and in-progress UI state are not destroyed by tab changes.
  */
 export default function WorkspaceDock({
   tab,
@@ -54,6 +53,9 @@ export default function WorkspaceDock({
       <div className="min-h-0 flex-1">
         <div className={tab === 'terminal' ? 'h-full' : 'hidden'}>
           <TerminalGroup />
+        </div>
+        <div className={tab === 'ai' ? 'h-full' : 'hidden'}>
+          <AiAgentPanel />
         </div>
         <div className={tab === 'logs' ? 'h-full' : 'hidden'}>
           <LogsPage />
