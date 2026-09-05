@@ -6,6 +6,7 @@ import {
 import { getSettings } from '@shared/settings'
 
 const settings = getSettings()
+const MAX_SALARY_INPUT = 10_000_000_000
 
 const jobSourceEnum = z.enum(['greenhouse', 'lever', 'ashby', 'workday', 'linkedin', 'indeed', 'jobstreet', 'generic'])
 const jobStatusEnum = z.enum(['queued', 'filled', 'submitted', 'failed'])
@@ -65,8 +66,10 @@ export const updateProfileShape = {
   desiredRoles: z.array(z.string().trim().max(100)).max(20).optional(),
   desiredLocations: z.array(z.string().trim().max(200)).max(20).optional(),
   remotePreference: remotePreferenceEnum.optional(),
-  salaryMin: z.number().int().min(0).max(10_000_000).nullable().optional(),
-  salaryMax: z.number().int().min(0).max(10_000_000).nullable().optional(),
+  // Indonesia salaries are commonly expressed as full IDR amounts (e.g. 15_000_000/month),
+  // so the old 10M ceiling incorrectly rejected perfectly normal preferences.
+  salaryMin: z.number().int().min(0).max(MAX_SALARY_INPUT).nullable().optional(),
+  salaryMax: z.number().int().min(0).max(MAX_SALARY_INPUT).nullable().optional(),
   salaryCurrency: z.string().trim().max(10).optional(),
   yearsExperience: z.number().int().min(0).max(80).nullable().optional(),
   summary: z.string().trim().max(5000).optional(),
