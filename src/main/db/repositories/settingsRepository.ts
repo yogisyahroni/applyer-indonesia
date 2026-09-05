@@ -13,6 +13,12 @@ import {
   type NotificationLocale,
   type NotificationPreferences
 } from '@shared/types/notification'
+import {
+  AI_DEFAULT_BASE_URLS,
+  DEFAULT_AI_CONFIG,
+  isAiMode,
+  type AiMode
+} from '@shared/types/ai'
 
 const STORAGE_MODE_KEY = 'storage_mode'
 const ONBOARDING_COMPLETED_KEY = 'onboarding_completed'
@@ -21,6 +27,9 @@ const INDEXED_JOBS_RETENTION_KEY = 'indexed_jobs_retention_days'
 const BROWSER_PREFERENCE_KEY = 'browser_preference'
 const NOTIFICATION_PREFERENCES_KEY = 'notification_preferences'
 const NOTIFICATION_LOCALE_KEY = 'notification_locale'
+const AI_MODE_KEY = 'ai_mode'
+const AI_MODEL_KEY = 'ai_model'
+const AI_BASE_URL_KEY = 'ai_base_url'
 
 function getSetting(key: string): string | null {
   const row = getDb().select().from(appSettings).where(eq(appSettings.key, key)).get()
@@ -103,4 +112,20 @@ export function getNotificationLocale(): NotificationLocale {
 
 export function setNotificationLocale(locale: NotificationLocale): void {
   setSetting(NOTIFICATION_LOCALE_KEY, locale)
+}
+
+export function getAiProviderSettings(): { mode: AiMode; model: string; baseUrl: string } {
+  const rawMode = getSetting(AI_MODE_KEY)
+  const mode: AiMode = isAiMode(rawMode) ? rawMode : DEFAULT_AI_CONFIG.mode
+  const model = getSetting(AI_MODEL_KEY) ?? DEFAULT_AI_CONFIG.model
+  const storedBaseUrl = getSetting(AI_BASE_URL_KEY)
+  const baseUrl =
+    storedBaseUrl ?? (mode === 'cli' ? '' : AI_DEFAULT_BASE_URLS[mode])
+  return { mode, model, baseUrl }
+}
+
+export function setAiProviderSettings(settings: { mode: AiMode; model: string; baseUrl: string }): void {
+  setSetting(AI_MODE_KEY, settings.mode)
+  setSetting(AI_MODEL_KEY, settings.model)
+  setSetting(AI_BASE_URL_KEY, settings.baseUrl)
 }
