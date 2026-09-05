@@ -4,6 +4,7 @@ import ProfileSection from './ProfileSection'
 import DocumentsSection from './DocumentsSection'
 import StorageSection from './StorageSection'
 import BrowserSection from './BrowserSection'
+import AccountsSection from './AccountsSection'
 import AgentSection from './AgentSection'
 import AppearanceSection from './AppearanceSection'
 import LanguageSection from './LanguageSection'
@@ -12,13 +13,12 @@ import DataSection from './DataSection'
 import DeveloperSection from './DeveloperSection'
 import NotificationsSection from './NotificationsSection'
 
-// Labels come from the `settings.nav.*` catalog keyed by id, so this list
-// only declares which sections exist and in what order.
 const SECTIONS = [
   'profile',
   'documents',
   'storage',
   'browser',
+  'accounts',
   'agent',
   'appearance',
   'language',
@@ -39,8 +39,9 @@ export default function SettingsPage({
   onOpenExport: () => void
   onOpenImport: () => void
 }): ReactElement {
-  const { t } = useTranslation('settings')
+  const { t, i18n } = useTranslation('settings')
   const [section, setSection] = useState<SectionId>(initialSection)
+  const accountsLabel = i18n.resolvedLanguage?.startsWith('id') ? 'Akun' : 'Accounts'
 
   return (
     <div className="flex h-full bg-canvas-inset">
@@ -53,7 +54,7 @@ export default function SettingsPage({
               section === id ? 'bg-canvas-soft text-text' : 'text-text-muted hover:text-text'
             }`}
           >
-            {t(`nav.${id}`)}
+            {id === 'accounts' ? accountsLabel : t(`nav.${id}`)}
           </button>
         ))}
       </nav>
@@ -62,6 +63,7 @@ export default function SettingsPage({
         {section === 'documents' && <DocumentsSection />}
         {section === 'storage' && <StorageSection />}
         {section === 'browser' && <BrowserSection />}
+        {section === 'accounts' && <AccountsSection />}
         {section === 'agent' && <AgentSection />}
         {section === 'appearance' && <AppearanceSection />}
         {section === 'language' && <LanguageSection />}
