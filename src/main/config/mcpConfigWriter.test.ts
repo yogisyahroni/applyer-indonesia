@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { join } from 'path'
 import { __setPackaged } from '../../../test/mocks/electron'
+import { mcpSocketPath } from './paths'
 
 const { claudeAdapter, codexAdapter } = vi.hoisted(() => ({
   claudeAdapter: {
@@ -51,23 +53,26 @@ describe('getMcpInvocation', () => {
   it('spawns the packaged binary as plain Node via ELECTRON_RUN_AS_NODE when packaged', () => {
     // process.resourcesPath only exists (and is read-only) inside a real
     // Electron process — cast to a mutable shape to stand one up for this test.
+    // Build the fake path with the host OS separator so the assertion remains
+    // meaningful on both POSIX and Windows.
     const mutableProcess = process as unknown as { resourcesPath?: string }
     const original = mutableProcess.resourcesPath
-    mutableProcess.resourcesPath = '/fake/resources'
+    const fakeResources = join(process.cwd(), 'fake-resources')
+    mutableProcess.resourcesPath = fakeResources
     try {
       __setPackaged(true)
       const invocation = getMcpInvocation()
       expect(invocation.command).toBe(process.execPath)
-      expect(invocation.args[0]).toBe('/fake/resources/mcp-bridge.mjs')
+      expect(invocation.args[0]).toBe(join(fakeResources, 'mcp-bridge.mjs'))
       expect(invocation.env).toEqual({ ELECTRON_RUN_AS_NODE: '1' })
     } finally {
       mutableProcess.resourcesPath = original
     }
   })
 
-  it('always passes the socket path as the second arg', () => {
+  it('always passes the platform socket or named-pipe path as the second arg', () => {
     const invocation = getMcpInvocation()
-    expect(invocation.args[1]).toMatch(/mcp\.sock$/)
+    expect(invocation.args[1]).toBe(mcpSocketPath())
   })
 })
 
@@ -137,9 +142,9 @@ describe('verifyMcpConnection', () => {
     // Dev-mode invocation points `node` at resources/mcp-bridge.mjs under
     // app.getAppPath(), which our electron mock sets to process.cwd() (the
     // real repo root) — that file exists for real, but nothing is listening
-    // on the (nonexistent) socket path it's told to bridge to, so the
-    // connection genuinely fails end-to-end, exercising the real
-    // StdioClientTransport failure path rather than a mocked one.
+    // on the socket/named-pipe path it's told to bridge to, so the connection
+    // genuinely fails end-to-end, exercising the real StdioClientTransport
+    // failure path rather than a mocked one.
     const result = await verifyMcpConnection()
     expect(result.success).toBe(false)
     expect(result.error).toBeTruthy()
