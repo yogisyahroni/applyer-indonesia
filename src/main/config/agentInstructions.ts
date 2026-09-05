@@ -6,11 +6,19 @@ import { agentWorkspaceDir } from './paths'
 // Codex CLI does the same for AGENTS.md. Both land in the shared agent
 // workspace dir (see paths.ts) so the guidance only applies to sessions
 // started from Applyer's terminal.
-const INSTRUCTIONS = `# Applyer — Job Search Agent
+const INSTRUCTIONS = `# Applyer Indonesia — Job Search Agent
 
-This is Applyer's embedded terminal working directory. An MCP server named
-\`applyer\` is available with tools for autonomous job hunting, backed by the
-app's local job-tracking database and a real browser:
+This is Applyer Indonesia's embedded terminal working directory. An MCP server
+named \`applyer\` is available with tools for autonomous job hunting, backed by
+the app's local job-tracking database and a real browser.
+
+Applyer Indonesia is Indonesia-first. Unless the user explicitly asks for jobs
+outside Indonesia, keep \`indonesiaOnly\` enabled. \`search_jobs\` defaults to
+Indonesia and searches JobStreet, LinkedIn, Indeed, and the user's tracked ATS
+boards. JobStreet is a first-class Indonesia source. Treat locations that cannot
+be positively identified as Indonesia as out of scope when strict filtering is
+enabled. If the user explicitly asks for another country or worldwide jobs,
+set \`indonesiaOnly: false\` and pass the requested location.
 
 - \`get_profile\` — the candidate's profile (contact info, desired roles,
   skills, salary expectations) and uploaded documents. Call this first so you
@@ -22,49 +30,55 @@ app's local job-tracking database and a real browser:
   you to change their profile or to fill it in from a resume — read the file
   yourself (\`~/resume.pdf\` and friends are ordinary files), then send the
   fields. Never invent a skill, salary, or location to fill a gap: leave the
-  field out instead.
-- \`search_jobs\` — search job postings by keyword. LinkedIn and Indeed search
-  across every company; \`greenhouse\`/\`lever\`/\`ashby\`/\`workday\` instead
-  search the company boards the user tracks, since those providers have no
-  cross-company search endpoint of their own.
+  field out instead. Preserve the user's salary currency; IDR values are
+  supported without converting them to USD.
+- \`search_jobs\` — search job postings by keyword. JobStreet, LinkedIn, and
+  Indeed search across companies; \`greenhouse\`/\`lever\`/\`ashby\`/\`workday\`
+  instead search the company boards the user tracks, since those providers
+  have no cross-company search endpoint of their own. Indonesia-only is the
+  default. Use a more specific Indonesian city/province when the user names
+  one; otherwise use Indonesia.
 - \`add_company_board\` — track one company's own ATS board so its postings
   become searchable. Worth doing for companies that run a Greenhouse/Lever/
-  Ashby/Workday board and never post to LinkedIn or Indeed, which is common
-  below a certain size and is exactly where the competition is thinnest. Give
-  it a company name, a domain, or a board URL; if you know which ATS the
-  company uses but not its slug, pass \`provider\` on its own as a hint. Add
-  companies the user has actually asked to watch — every tracked board is a
-  request on every search.
+  Ashby/Workday board and do not reliably post to aggregators. Give it a
+  company name, a domain, or a board URL; if you know which ATS the company
+  uses but not its slug, pass \`provider\` on its own as a hint. Add companies
+  the user has actually asked to watch — every tracked board is a request on
+  every search.
 - \`list_company_boards\` — what is currently tracked, and how each board's
   last fetch went. Check before adding, and use it to explain an empty
   greenhouse/lever/ashby/workday result.
-- \`get_job_details\` — fetch the full description, location, and application
-  info for a single job posting URL.
+- \`get_job_details\` — fetch the full description, location, salary when
+  available, and application info for a single job posting URL. JobStreet
+  Indonesia URLs are routed to the dedicated JobStreet scraper.
 - \`list_jobs\` — check what's already tracked (optionally by status) before
   searching again.
 - \`queue_job\` — add a matching job to the user's task board once you've
   judged it a good fit. Deduplicated by URL, safe to call again.
 - \`fill_application\` — open a visible browser and fill in a queued job's
   application form from the candidate's profile. Never submits — the user
-  reviews and submits it themselves.
+  reviews and submits it themselves. JobStreet may require login or custom
+  questions; stop for human review rather than guessing an answer.
 - \`flag_failure\` — mark a job Failed with a reason when you can't proceed
   with it (e.g. a login wall or an expired listing).
 - \`exclude_job\` — permanently blacklist a job posting URL: removed from the
   board if tracked, never returned by \`search_jobs\` again, can't be
   re-queued. ONLY call this when the user has explicitly asked to exclude,
   blacklist, hide, or stop seeing a posting or postings matching some stated
-  criteria (e.g. "put job postings that are not remote on the exclusion
-  list", "exclude that one", "I never want to see Foo Corp jobs again").
-  Never call it just because you personally judge a job a bad match — for
-  that, simply don't queue it.
+  criteria. Never call it just because you personally judge a job a bad
+  match — for that, simply don't queue it.
 
-When the user asks you to find, search for, track, or apply to jobs, use
-these tools instead of browsing job sites manually — they operate on the
-same job board the user sees in the app. Typical flow: \`get_profile\` →
-\`search_jobs\` → \`get_job_details\` on promising results → \`queue_job\` for
-good matches → \`fill_application\` when asked to start applying.
+When the user asks you to find, search for, track, or apply to jobs, use these
+tools instead of browsing job sites manually — they operate on the same job
+board the user sees in the app. Typical flow: \`get_profile\` → \`search_jobs\`
+→ \`get_job_details\` on promising results → \`queue_job\` for good matches →
+\`fill_application\` when asked to start applying.
 
-This file is regenerated by Applyer on every launch — edits here won't persist.
+Never submit an application automatically. The final submit action always
+belongs to the user.
+
+This file is regenerated by Applyer Indonesia on every launch — edits here
+won't persist.
 `
 
 export function writeAgentInstructions(): void {
