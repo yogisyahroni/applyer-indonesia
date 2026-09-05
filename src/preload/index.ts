@@ -38,6 +38,7 @@ import type {
   ListCompanyBoardsResult
 } from '@shared/types/companyBoard'
 import type { AppError } from '@shared/types/errorCodes'
+import type { AccountConnectionStatus, AccountProvider } from '@shared/types/accountConnection'
 
 /**
  * A successful add reports more than "it worked": whether the board was
@@ -250,6 +251,24 @@ const onboardingApi = {
   verifyMcpConnection: (): Promise<McpVerifyResult> => ipcRenderer.invoke(IPC.onboarding.verifyMcpConnection)
 }
 
+const accountConnectionsApi = {
+  list: (): Promise<{ accounts: AccountConnectionStatus[] }> => ipcRenderer.invoke(IPC.accountConnections.list),
+  begin: (
+    provider: AccountProvider
+  ): Promise<{ ok: true; account: AccountConnectionStatus } | { ok: false; error: string }> =>
+    ipcRenderer.invoke(IPC.accountConnections.begin, { provider }),
+  save: (
+    provider: AccountProvider
+  ): Promise<{ ok: true; account: AccountConnectionStatus } | { ok: false; error: string }> =>
+    ipcRenderer.invoke(IPC.accountConnections.save, { provider }),
+  cancel: (provider: AccountProvider): Promise<{ ok: boolean; error?: string }> =>
+    ipcRenderer.invoke(IPC.accountConnections.cancel, { provider }),
+  disconnect: (
+    provider: AccountProvider
+  ): Promise<{ ok: true; account: AccountConnectionStatus } | { ok: false; error: string }> =>
+    ipcRenderer.invoke(IPC.accountConnections.disconnect, { provider })
+}
+
 const browserControlApi = {
   resumeTask: (taskId: string): Promise<{ ok: boolean; error?: string }> =>
     ipcRenderer.invoke(IPC.browserControl.resumeTask, { taskId }),
@@ -377,6 +396,7 @@ const api = {
   exclusions: exclusionsApi,
   profile: profileApi,
   onboarding: onboardingApi,
+  accountConnections: accountConnectionsApi,
   browserControl: browserControlApi,
   browserSetup: browserSetupApi,
   settings: settingsApi,
