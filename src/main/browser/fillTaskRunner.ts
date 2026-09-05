@@ -224,7 +224,12 @@ async function continueAfterLogin(
     setBlocking(jobId, captcha.reason ?? 'captcha_verification', captchaTaskId)
     const updated = getJob(jobId)
     if (updated) broadcastJobUpdate(updated)
-    broadcastCaptchaDetected({ captchaTaskId, taskId: captchaTaskId, jobId, jobTitle: updated?.title ?? '', company: updated?.company ?? '' } as never)
+    broadcastCaptchaDetected({
+      taskId: captchaTaskId,
+      jobId,
+      jobTitle: updated?.title ?? '',
+      company: updated?.company ?? ''
+    })
     await page.bringToFront().catch(() => {})
     await continueAfterCaptcha(captchaTaskId, jobId, page, browser, profile)
     return
