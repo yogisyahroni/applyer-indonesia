@@ -12,6 +12,7 @@ import { registerExclusionsIpc } from './ipc/exclusions'
 import { registerCompanyBoardsIpc } from './ipc/companyBoards'
 import { registerProfileIpc } from './ipc/profile'
 import { registerOnboardingIpc } from './ipc/onboarding'
+import { registerAccountConnectionsIpc } from './ipc/accountConnections'
 import { registerBrowserControlIpc } from './ipc/browserControl'
 import { registerBrowserSetupIpc } from './ipc/browserSetup'
 import { registerSettingsIpc } from './ipc/settings'
@@ -27,12 +28,13 @@ import { disposeAllSessions } from './terminal/ptyManager'
 import { applyProductionCsp } from './security'
 import { configureApplicationMenu } from './menu'
 import { closeAllBrowsers } from './browser/browserController'
+import { closeAccountConnectionBrowsers } from './browser/accountSessions'
 import { writeAgentInstructions } from './config/agentInstructions'
 import { reconcileOrphanedBlockedJobs } from './jobActions'
 import { pruneIndexedJobs } from './db/repositories/indexedJobsRepository'
 
 function initializeApp(): void {
-  electronApp.setAppUserModelId('com.applyer.app')
+  electronApp.setAppUserModelId('com.applyer.indonesia.desktop')
 
   try {
     const settingsWarnings: unknown = JSON.parse(process.env.APPLYER_SETTINGS_WARNINGS ?? '[]')
@@ -86,6 +88,7 @@ function initializeApp(): void {
   registerCompanyBoardsIpc()
   registerProfileIpc()
   registerOnboardingIpc()
+  registerAccountConnectionsIpc()
   registerBrowserControlIpc()
   registerBrowserSetupIpc()
   registerSettingsIpc()
@@ -139,5 +142,6 @@ app.on('window-all-closed', () => {
 app.on('before-quit', () => {
   disposeAllSessions()
   closeMcpSocketServer()
+  void closeAccountConnectionBrowsers()
   void closeAllBrowsers()
 })
