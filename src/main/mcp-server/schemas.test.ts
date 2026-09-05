@@ -185,12 +185,13 @@ describe('updateProfileShape', () => {
     expect(updateProfileSchema.safeParse({ email: 'not-an-email' }).success).toBe(false)
   })
 
-  it('accepts null for the nullable numerics, rejects a non-integer or out-of-range one', () => {
+  it('accepts null for nullable numerics, realistic IDR salary values, and rejects invalid ranges', () => {
     expect(updateProfileSchema.safeParse({ salaryMin: null, yearsExperience: null }).success).toBe(true)
+    expect(updateProfileSchema.safeParse({ salaryMin: 25_000_000, salaryMax: 50_000_000, salaryCurrency: 'IDR' }).success).toBe(true)
     expect(updateProfileSchema.safeParse({ yearsExperience: 81 }).success).toBe(false)
     expect(updateProfileSchema.safeParse({ yearsExperience: -1 }).success).toBe(false)
     expect(updateProfileSchema.safeParse({ salaryMin: 1.5 }).success).toBe(false)
-    expect(updateProfileSchema.safeParse({ salaryMax: 10_000_001 }).success).toBe(false)
+    expect(updateProfileSchema.safeParse({ salaryMax: 10_000_000_001 }).success).toBe(false)
   })
 
   it('rejects an unknown remotePreference', () => {
