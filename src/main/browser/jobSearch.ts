@@ -1,9 +1,11 @@
 import { searchIndeed } from './scrapers/indeed'
 import { searchLinkedIn } from './scrapers/linkedin'
+import { searchJobStreet } from './scrapers/jobstreet'
 import { searchAtsBoards } from './ats/searchAtsBoards'
 import { crossSourceKey, interleaveByBoard } from './ats/matching'
 import { isUrlExcluded } from '../db/repositories/jobExclusionsRepository'
 import { ATS_PROVIDERS, type AtsProvider } from '@shared/types/companyBoard'
+import { indonesiaSearchLocation, isIndonesiaLocation } from './indonesia'
 import type { JobSearchResultItem } from './types'
 import type { JobSource } from './sourceRouter'
 
@@ -12,6 +14,8 @@ export interface SearchJobsParams {
   location?: string
   sources?: JobSource[]
   limit: number
+  /** Reject results that cannot be positively identified as Indonesia-based. */
+  indonesiaOnly?: boolean
 }
 
 export interface SearchJobsOutcome {
@@ -20,8 +24,11 @@ export interface SearchJobsOutcome {
   warnings: string[]
 }
 
-/** Cross-company keyword search, scraped from a rendered page. */
-const AGGREGATOR_SOURCES: JobSource[] = ['indeed', 'linkedin']
+/** Existing upstream default aggregators. Kept unchanged for low-level API compatibility. */
+const DEFAULT_AGGREGATOR_SOURCES: JobSource[] = ['indeed', 'linkedin']
+
+/** Indonesia distribution adds JobStreet as a first-class aggregator. */
+const SEARCHABLE_AGGREGATOR_SOURCES: JobSource[] = [...DEFAULT_AGGREGATOR_SOURCES, 'jobstreet']
 
 /**
  * Per-company ATS boards. None of these has a cross-company search endpoint,
@@ -32,21 +39,25 @@ const AGGREGATOR_SOURCES: JobSource[] = ['indeed', 'linkedin']
  */
 const ATS_SOURCES: JobSource[] = [...ATS_PROVIDERS]
 
+/** Preserve the upstream low-level default; the MCP Indonesia adapter opts into JobStreet explicitly. */
+const DEFAULT_SOURCES: JobSource[] = [...DEFAULT_AGGREGATOR_SOURCES, ...ATS_SOURCES]
+
 /**
  * `generic` stays out: it's the fallback for an arbitrary careers page and
  * has nothing to enumerate, so `get_job_details` on a specific URL is the
  * only thing that makes sense for it.
  */
-const SEARCHABLE_SOURCES: JobSource[] = [...AGGREGATOR_SOURCES, ...ATS_SOURCES]
+const SEARCHABLE_SOURCES: JobSource[] = [...SEARCHABLE_AGGREGATOR_SOURCES, ...ATS_SOURCES]
 
 function isAtsSource(source: JobSource): source is AtsProvider {
   return (ATS_SOURCES as string[]).includes(source)
 }
 
 export async function searchJobs(params: SearchJobsParams): Promise<SearchJobsOutcome> {
-  const requested = params.sources && params.sources.length > 0 ? params.sources : SEARCHABLE_SOURCES
+  const requested = params.sources && params.sources.length > 0 ? params.sources : DEFAULT_SOURCES
   const toSearch = requested.filter((s) => SEARCHABLE_SOURCES.includes(s))
   const warnings: string[] = []
+  const effectiveLocation = params.indonesiaOnly ? indonesiaSearchLocation(params.location) : params.location
 
   for (const source of requested) {
     if (!SEARCHABLE_SOURCES.includes(source)) {
@@ -61,6 +72,7 @@ export async function searchJobs(params: SearchJobsParams): Promise<SearchJobsOu
   // final ordering doesn't depend on which network call returned first.
   let indeedResults: JobSearchResultItem[] = []
   let linkedinResults: JobSearchResultItem[] = []
+  let jobstreetResults: JobSearchResultItem[] = []
   let atsResults: JobSearchResultItem[] = []
 
   const tasks: Promise<void>[] = []
@@ -68,7 +80,7 @@ export async function searchJobs(params: SearchJobsParams): Promise<SearchJobsOu
   if (toSearch.includes('indeed')) {
     tasks.push(
       (async () => {
-        const result = await searchIndeed(params.query, params.location, params.limit)
+        const result = await searchIndeed(params.query, effectiveLocation, params.limit)
         searchedSources.push('indeed')
         if (result.warning) warnings.push(result.warning)
         indeedResults = result.results
@@ -79,10 +91,21 @@ export async function searchJobs(params: SearchJobsParams): Promise<SearchJobsOu
   if (toSearch.includes('linkedin')) {
     tasks.push(
       (async () => {
-        const result = await searchLinkedIn(params.query, params.location, params.limit)
+        const result = await searchLinkedIn(params.query, effectiveLocation, params.limit)
         searchedSources.push('linkedin')
         if (result.warning) warnings.push(result.warning)
         linkedinResults = result.results
+      })()
+    )
+  }
+
+  if (toSearch.includes('jobstreet')) {
+    tasks.push(
+      (async () => {
+        const result = await searchJobStreet(params.query, effectiveLocation, params.limit)
+        searchedSources.push('jobstreet')
+        if (result.warning) warnings.push(result.warning)
+        jobstreetResults = result.results
       })()
     )
   }
@@ -96,7 +119,7 @@ export async function searchJobs(params: SearchJobsParams): Promise<SearchJobsOu
       (async () => {
         const result = await searchAtsBoards({
           query: params.query,
-          location: params.location,
+          location: effectiveLocation,
           limit: params.limit,
           providers: atsProviders
         })
@@ -114,8 +137,19 @@ export async function searchJobs(params: SearchJobsParams): Promise<SearchJobsOu
     }
   }
 
+  const allFetched = [...atsResults, ...indeedResults, ...linkedinResults, ...jobstreetResults]
+  if (params.indonesiaOnly) {
+    const rejectedByCountry = allFetched.filter((result) => !isIndonesiaLocation(result.location, result.source)).length
+    if (rejectedByCountry > 0) {
+      warnings.push(
+        `indonesia-only: filtered ${rejectedByCountry} result(s) whose location could not be confirmed as Indonesia.`
+      )
+    }
+  }
+
   const seenUrls = new Set<string>()
   const keep = (result: JobSearchResultItem): boolean => {
+    if (params.indonesiaOnly && !isIndonesiaLocation(result.location, result.source)) return false
     if (seenUrls.has(result.url)) return false
     if (isUrlExcluded(result.url)) return false
     seenUrls.add(result.url)
@@ -127,16 +161,11 @@ export async function searchJobs(params: SearchJobsParams): Promise<SearchJobsOu
   /**
    * A posting reached through the company's own board is the better copy of
    * the same job: canonical URL, no login wall, and a fill path that already
-   * works. The two copies have different URLs and no shared id, so company +
+   * works. The copies have different URLs and no shared id, so company +
    * title + location is the only handle on the fact that they're one job.
-   *
-   * Deliberately one-directional — aggregator rows are matched against the
-   * ATS set but never added to it. Two aggregator listings that happen to
-   * share a company, title and location are often genuinely different
-   * requisitions, and collapsing those would hide real postings.
    */
   const atsIdentities = new Set(keptAts.map((r) => crossSourceKey(r.company, r.title, r.location)))
-  const keptAggregators = [...indeedResults, ...linkedinResults].filter(
+  const keptAggregators = [...indeedResults, ...linkedinResults, ...jobstreetResults].filter(
     (result) => !atsIdentities.has(crossSourceKey(result.company, result.title, result.location)) && keep(result)
   )
 
