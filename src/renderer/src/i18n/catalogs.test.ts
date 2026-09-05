@@ -8,7 +8,7 @@
 // find out what they missed.
 import { describe, it, expect } from 'vitest'
 import { resources, defaultNS } from './config'
-import { SUPPORTED_LOCALES, FALLBACK_LOCALE, type LocaleCode } from './locale'
+import { SUPPORTED_LOCALES, type LocaleCode } from './locale'
 
 type Json = { [key: string]: string | Json }
 
@@ -32,15 +32,20 @@ function placeholders(value: string): string[] {
   return [...value.matchAll(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g)].map((m) => m[1]!).sort()
 }
 
-const NAMESPACES = Object.keys(resources[FALLBACK_LOCALE]) as (keyof (typeof resources)['en'])[]
+// The runtime fallback for Applyer Indonesia is Bahasa Indonesia, but English
+// remains the canonical catalog schema/source text. Keep these two concerns
+// independent so changing product defaults never changes what translations
+// are validated against.
+const SOURCE_LOCALE: LocaleCode = 'en'
+const NAMESPACES = Object.keys(resources[SOURCE_LOCALE]) as (keyof (typeof resources)['en'])[]
 const OTHER_LOCALES = SUPPORTED_LOCALES.map((l) => l.code).filter(
-  (code): code is LocaleCode => code !== FALLBACK_LOCALE
+  (code): code is LocaleCode => code !== SOURCE_LOCALE
 )
 
 describe('catalog structure', () => {
   it('exposes the same namespaces for every locale', () => {
     for (const { code } of SUPPORTED_LOCALES) {
-      expect(Object.keys(resources[code]).sort()).toEqual(Object.keys(resources[FALLBACK_LOCALE]).sort())
+      expect(Object.keys(resources[code]).sort()).toEqual(Object.keys(resources[SOURCE_LOCALE]).sort())
     }
   })
 
@@ -50,7 +55,7 @@ describe('catalog structure', () => {
 
   it('has no empty strings in the English catalog', () => {
     for (const ns of NAMESPACES) {
-      for (const [path, value] of flatten(resources[FALLBACK_LOCALE][ns] as Json)) {
+      for (const [path, value] of flatten(resources[SOURCE_LOCALE][ns] as Json)) {
         expect(value.trim(), `${ns}:${path} is empty`).not.toBe('')
       }
     }
@@ -64,7 +69,7 @@ describe.each(OTHER_LOCALES)('%s catalog', (locale) => {
     // *extra* key is always a mistake: a typo, or a leftover after an
     // English key was renamed.
     for (const ns of NAMESPACES) {
-      const english = new Set([...flatten(resources[FALLBACK_LOCALE][ns] as Json).keys()].map(stripPluralSuffix))
+      const english = new Set([...flatten(resources[SOURCE_LOCALE][ns] as Json).keys()].map(stripPluralSuffix))
       for (const path of flatten(resources[locale][ns] as Json).keys()) {
         expect(english.has(stripPluralSuffix(path)), `${locale} has unknown key ${ns}:${path}`).toBe(true)
       }
@@ -75,7 +80,7 @@ describe.each(OTHER_LOCALES)('%s catalog', (locale) => {
     // A dropped {{count}} renders a sentence with a hole in it, and a typo'd
     // one renders the literal braces — neither is visible to TypeScript.
     for (const ns of NAMESPACES) {
-      const english = flatten(resources[FALLBACK_LOCALE][ns] as Json)
+      const english = flatten(resources[SOURCE_LOCALE][ns] as Json)
       for (const [path, translated] of flatten(resources[locale][ns] as Json)) {
         const source = english.get(path) ?? english.get(`${stripPluralSuffix(path)}_other`)
         if (source === undefined) continue // covered by the unknown-key test
