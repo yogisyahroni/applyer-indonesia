@@ -1,14 +1,14 @@
 {
   "name": "applyer",
   "version": "0.1.0",
-  "description": "Local Electron app for autonomous job hunting via CLI agents (Claude Code, Codex, etc.)",
+  "description": "Applyer Indonesia: local Electron job-search assistant with Indonesia-first search and JobStreet support",
   "main": "./out/main/index.js",
-  "desktopName": "com.applyer.app.desktop",
-  "author": "xCirno1",
+  "desktopName": "com.applyer.indonesia.desktop",
+  "author": "xCirno1 and contributors",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xCirno1/applyer.git"
+    "url": "git+https://github.com/yogisyahroni/applyer-indonesia.git"
   },
   "private": true,
   "type": "module",
@@ -86,8 +86,8 @@
     "vitest": "^4.1.11"
   },
   "build": {
-    "appId": "com.applyer.app",
-    "productName": "Applyer",
+    "appId": "com.applyer.indonesia",
+    "productName": "Applyer Indonesia",
     "directories": {
       "output": "release"
     },
@@ -99,7 +99,8 @@
       "!**/node_modules/@napi-rs/canvas*/**"
     ],
     "electronLanguages": [
-      "en-US"
+      "en-US",
+      "id"
     ],
     "asar": true,
     "asarUnpack": [
