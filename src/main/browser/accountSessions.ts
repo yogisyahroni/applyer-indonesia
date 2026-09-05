@@ -49,6 +49,13 @@ function writeEncryptedState(provider: AccountProvider, state: StoredBrowserStat
   return true
 }
 
+export function storeAccountStorageState(provider: AccountProvider, state: StoredBrowserState): AccountConnectionStatus {
+  const updatedAt = new Date().toISOString()
+  volatileStates.set(provider, { state: structuredClone(state), updatedAt })
+  writeEncryptedState(provider, state)
+  return getAccountConnectionStatus(provider)
+}
+
 export function loadAccountStorageState(provider: AccountProvider): StoredBrowserState | null {
   const volatile = volatileStates.get(provider)
   if (volatile) return structuredClone(volatile.state)
@@ -115,13 +122,11 @@ export async function saveAccountConnection(provider: AccountProvider): Promise<
   if (!pending) throw new Error(`No ${ACCOUNT_PROVIDER_META[provider].label} login window is currently open.`)
 
   const state = await pending.context.storageState()
-  const updatedAt = new Date().toISOString()
-  volatileStates.set(provider, { state, updatedAt })
-  writeEncryptedState(provider, state)
+  const status = storeAccountStorageState(provider, state)
 
   pendingConnections.delete(provider)
   await pending.browser.close().catch(() => {})
-  return getAccountConnectionStatus(provider)
+  return status
 }
 
 export async function cancelAccountConnection(provider: AccountProvider): Promise<void> {
