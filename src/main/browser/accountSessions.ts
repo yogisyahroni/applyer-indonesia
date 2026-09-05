@@ -6,6 +6,7 @@ import { launchHeadedContext } from './browserController'
 import {
   ACCOUNT_PROVIDERS,
   ACCOUNT_PROVIDER_META,
+  isAccountLoginUrl,
   type AccountConnectionStatus,
   type AccountProvider
 } from '@shared/types/accountConnection'
@@ -121,7 +122,17 @@ export async function saveAccountConnection(provider: AccountProvider): Promise<
   const pending = pendingConnections.get(provider)
   if (!pending) throw new Error(`No ${ACCOUNT_PROVIDER_META[provider].label} login window is currently open.`)
 
+  const pages = pending.context.pages()
+  const currentPage = pages.at(-1)
+  if (!currentPage || isAccountLoginUrl(provider, currentPage.url())) {
+    throw new Error(`Finish signing in to ${ACCOUNT_PROVIDER_META[provider].label} in the browser before saving the session.`)
+  }
+
   const state = await pending.context.storageState()
+  if (state.cookies.length === 0) {
+    throw new Error(`${ACCOUNT_PROVIDER_META[provider].label} did not create a signed-in browser session yet.`)
+  }
+
   const status = storeAccountStorageState(provider, state)
 
   pendingConnections.delete(provider)
