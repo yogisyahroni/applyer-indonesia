@@ -7,8 +7,8 @@ const pkg = JSON.parse(readFileSync(resolve(__dirname, '../../package.json'), 'u
 }
 
 describe('packaging config', () => {
-  it('restricts Electron locales to en-US', () => {
-    expect(pkg.build.electronLanguages).toEqual(['en-US'])
+  it('packages the English and Indonesian Electron locales', () => {
+    expect(pkg.build.electronLanguages).toEqual(['en-US', 'id'])
   })
 
   it('excludes the whole .local-browsers directory — packaged builds resolve browsers at runtime instead (browserController.ts)', () => {
