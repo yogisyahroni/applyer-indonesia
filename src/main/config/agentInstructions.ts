@@ -6,9 +6,9 @@ import { agentWorkspaceDir } from './paths'
 // Codex CLI does the same for AGENTS.md. Both land in the shared agent
 // workspace dir (see paths.ts) so the guidance only applies to sessions
 // started from Applyer's terminal.
-const INSTRUCTIONS = `# Applyer — Job Search Agent
+const INSTRUCTIONS = `# Applyer Indonesia — Job Search Agent
 
-This is Applyer's embedded terminal working directory. An MCP server named
+This is Applyer Indonesia's embedded terminal working directory. An MCP server named
 \`applyer\` is available with tools for autonomous job hunting, backed by the
 app's local job-tracking database and a real browser:
 
@@ -18,26 +18,19 @@ app's local job-tracking database and a real browser:
 - \`update_profile\` — write fields back to that profile. Every field is
   optional and only what you pass is written, so it is safe to send just the
   parts you know; list fields (skills, desired roles, desired locations)
-  replace the stored list rather than appending. Use it when the user asks
-  you to change their profile or to fill it in from a resume — read the file
-  yourself (\`~/resume.pdf\` and friends are ordinary files), then send the
-  fields. Never invent a skill, salary, or location to fill a gap: leave the
-  field out instead.
-- \`search_jobs\` — search job postings by keyword. LinkedIn and Indeed search
-  across every company; \`greenhouse\`/\`lever\`/\`ashby\`/\`workday\` instead
-  search the company boards the user tracks, since those providers have no
-  cross-company search endpoint of their own.
+  replace the stored list rather than appending. Never invent a skill, salary,
+  or location to fill a gap: leave the field out instead.
+- \`search_jobs\` — search job postings by keyword. JobStreet is the primary
+  Indonesia source, alongside Indeed and LinkedIn. Greenhouse/Lever/Ashby/
+  Workday instead search company boards the user tracks, since those providers
+  have no cross-company search endpoint of their own.
 - \`add_company_board\` — track one company's own ATS board so its postings
   become searchable. Worth doing for companies that run a Greenhouse/Lever/
-  Ashby/Workday board and never post to LinkedIn or Indeed, which is common
-  below a certain size and is exactly where the competition is thinnest. Give
-  it a company name, a domain, or a board URL; if you know which ATS the
-  company uses but not its slug, pass \`provider\` on its own as a hint. Add
-  companies the user has actually asked to watch — every tracked board is a
-  request on every search.
+  Ashby/Workday board and never post to the large aggregators. Give it a company
+  name, a domain, or a board URL; if you know which ATS the company uses but not
+  its slug, pass \`provider\` on its own as a hint.
 - \`list_company_boards\` — what is currently tracked, and how each board's
-  last fetch went. Check before adding, and use it to explain an empty
-  greenhouse/lever/ashby/workday result.
+  last fetch went.
 - \`get_job_details\` — fetch the full description, location, and application
   info for a single job posting URL.
 - \`list_jobs\` — check what's already tracked (optionally by status) before
@@ -46,23 +39,29 @@ app's local job-tracking database and a real browser:
   judged it a good fit. Deduplicated by URL, safe to call again.
 - \`fill_application\` — open a visible browser and fill in a queued job's
   application form from the candidate's profile. Never submits — the user
-  reviews and submits it themselves.
+  reviews and submits it themselves. If JobStreet/LinkedIn/Indeed requires
+  login, Applyer pauses in a visible browser so the user can sign in, complete
+  2FA/CAPTCHA themselves, then saves the resulting session locally for reuse.
+  Applyer never asks the agent for the user's password.
 - \`flag_failure\` — mark a job Failed with a reason when you can't proceed
-  with it (e.g. a login wall or an expired listing).
-- \`exclude_job\` — permanently blacklist a job posting URL: removed from the
-  board if tracked, never returned by \`search_jobs\` again, can't be
-  re-queued. ONLY call this when the user has explicitly asked to exclude,
-  blacklist, hide, or stop seeing a posting or postings matching some stated
-  criteria (e.g. "put job postings that are not remote on the exclusion
-  list", "exclude that one", "I never want to see Foo Corp jobs again").
-  Never call it just because you personally judge a job a bad match — for
-  that, simply don't queue it.
+  with it (e.g. an expired listing).
+- \`exclude_job\` — permanently blacklist a job posting URL only when the user
+  explicitly asks to exclude or blacklist it.
 
-When the user asks you to find, search for, track, or apply to jobs, use
-these tools instead of browsing job sites manually — they operate on the
-same job board the user sees in the app. Typical flow: \`get_profile\` →
-\`search_jobs\` → \`get_job_details\` on promising results → \`queue_job\` for
-good matches → \`fill_application\` when asked to start applying.
+Salary handling is deliberately permissive: many legitimate Indonesian job
+postings do not disclose compensation. A missing \`salaryRange\` is "not
+disclosed", not a mismatch and never a reason by itself to skip, exclude, or
+refuse to apply. Use a disclosed salary to judge fit when available. When it is
+missing, judge the role from title, responsibilities, seniority, location,
+skills, employment type, and the candidate's preferences, then keep salary as
+an interview/offer-stage question unless the user explicitly requires salary
+disclosure before applying.
+
+When the user asks you to find, search for, track, or apply to jobs, use these
+tools instead of browsing job sites manually — they operate on the same job
+board the user sees in the app. Typical flow: \`get_profile\` → \`search_jobs\`
+→ \`get_job_details\` on promising results → \`queue_job\` for good matches →
+\`fill_application\` when asked to start applying.
 
 This file is regenerated by Applyer on every launch — edits here won't persist.
 `
