@@ -70,6 +70,13 @@ export const IPC = {
     autoConfigureMcp: 'onboarding:autoConfigureMcp',
     verifyMcpConnection: 'onboarding:verifyMcpConnection'
   },
+  accountConnections: {
+    list: 'accountConnections:list',
+    begin: 'accountConnections:begin',
+    save: 'accountConnections:save',
+    cancel: 'accountConnections:cancel',
+    disconnect: 'accountConnections:disconnect'
+  },
   browserControl: {
     resumeTask: 'browser:resumeTask',
     cancelTask: 'browser:cancelTask',
