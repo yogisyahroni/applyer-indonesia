@@ -51,77 +51,87 @@ export const AI_TOOLS: readonly AiToolDefinition[] = [
     title: 'Get candidate profile',
     description: 'Get the candidate profile and uploaded-document metadata before matching jobs or filling applications.',
     schema: z.object(getProfileShape),
-    execute: async (input) => getProfileTool(z.object(getProfileShape).parse(input))
+    execute: async () => getProfileTool()
   },
   {
     name: 'update_profile',
     title: 'Update candidate profile',
     description: 'Update only profile fields explicitly supported by the user or their materials. Never invent skills, salary, experience, or locations.',
     schema: z.object(updateProfileShape),
-    execute: async (input) => updateProfileTool(z.object(updateProfileShape).parse(input))
+    execute: async (input) =>
+      updateProfileTool(z.object(updateProfileShape).parse(input) as Parameters<typeof updateProfileTool>[0])
   },
   {
     name: 'search_jobs',
     title: 'Search jobs',
     description: 'Search JobStreet, LinkedIn, Indeed, and tracked company ATS boards. Salary may be absent and must never be treated as an automatic rejection.',
     schema: z.object(searchJobsShape),
-    execute: async (input) => searchJobsTool(z.object(searchJobsShape).parse(input))
+    execute: async (input) =>
+      searchJobsTool(z.object(searchJobsShape).parse(input) as Parameters<typeof searchJobsTool>[0])
   },
   {
     name: 'get_job_details',
     title: 'Get job details',
     description: 'Fetch the full description and application information for a job URL using the appropriate source adapter.',
     schema: z.object(getJobDetailsShape),
-    execute: async (input) => getJobDetailsTool(z.object(getJobDetailsShape).parse(input))
+    execute: async (input) =>
+      getJobDetailsTool(z.object(getJobDetailsShape).parse(input) as Parameters<typeof getJobDetailsTool>[0])
   },
   {
     name: 'queue_job',
     title: 'Queue matching job',
     description: 'Add a job to the review board after deciding it is a good match. Duplicate URLs are handled safely.',
     schema: z.object(queueJobShape),
-    execute: async (input) => queueJobTool(z.object(queueJobShape).parse(input))
+    execute: async (input) =>
+      queueJobTool(z.object(queueJobShape).parse(input) as Parameters<typeof queueJobTool>[0])
   },
   {
     name: 'list_jobs',
     title: 'List tracked jobs',
     description: 'List jobs already on the board, optionally filtered by status.',
     schema: z.object(listJobsShape),
-    execute: async (input) => listJobsTool(z.object(listJobsShape).parse(input))
+    execute: async (input) =>
+      listJobsTool(z.object(listJobsShape).parse(input) as Parameters<typeof listJobsTool>[0])
   },
   {
     name: 'flag_failure',
     title: 'Flag job failure',
     description: 'Mark a queued or filled job as failed when the workflow cannot safely continue.',
     schema: z.object(flagFailureShape),
-    execute: async (input) => flagFailureTool(z.object(flagFailureShape).parse(input))
+    execute: async (input) =>
+      flagFailureTool(z.object(flagFailureShape).parse(input) as Parameters<typeof flagFailureTool>[0])
   },
   {
     name: 'fill_application',
     title: 'Fill application',
     description: 'Open a visible browser and fill standard application fields. Never submit the application; the user reviews and submits manually.',
     schema: z.object(fillApplicationShape),
-    execute: async (input) => fillApplicationTool(z.object(fillApplicationShape).parse(input))
+    execute: async (input) =>
+      fillApplicationTool(z.object(fillApplicationShape).parse(input) as Parameters<typeof fillApplicationTool>[0])
   },
   {
     name: 'exclude_job',
     title: 'Exclude job',
     description: 'Permanently exclude a posting only when the user explicitly asks to hide, blacklist, or exclude it.',
     schema: z.object(excludeJobShape),
-    execute: async (input) => excludeJobTool(z.object(excludeJobShape).parse(input))
+    execute: async (input) =>
+      excludeJobTool(z.object(excludeJobShape).parse(input) as Parameters<typeof excludeJobTool>[0])
   },
   {
     name: 'add_company_board',
     title: 'Track company ATS board',
     description: 'Add a company Greenhouse, Lever, Ashby, or Workday board to future searches.',
     schema: z.object(addCompanyBoardShape),
-    execute: async (input) => addCompanyBoardTool(z.object(addCompanyBoardShape).parse(input))
+    execute: async (input) =>
+      addCompanyBoardTool(z.object(addCompanyBoardShape).parse(input) as Parameters<typeof addCompanyBoardTool>[0])
   },
   {
     name: 'list_company_boards',
     title: 'List company ATS boards',
     description: 'List company ATS boards that Applyer currently tracks.',
     schema: z.object(listCompanyBoardsShape),
-    execute: async (input) => listCompanyBoardsTool(z.object(listCompanyBoardsShape).parse(input))
+    execute: async (input) =>
+      listCompanyBoardsTool(z.object(listCompanyBoardsShape).parse(input) as Parameters<typeof listCompanyBoardsTool>[0])
   }
 ] as const
 
