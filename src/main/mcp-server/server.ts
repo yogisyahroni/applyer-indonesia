@@ -32,8 +32,8 @@ export function createApplyerMcpServer(): McpServer {
     {
       title: 'Get candidate profile',
       description:
-        "Returns the user's profile (name, contact info, desired roles, skills, salary expectations, etc.) and a list of their uploaded documents (resume, cover letter). Use this to judge whether a job is a good match and to fill application forms."
-      ,inputSchema: getProfileShape
+        "Returns the user's profile (name, contact info, desired roles, skills, salary expectations, etc.) and a list of their uploaded documents (resume, cover letter). Use this to judge whether a job is a good match and to fill application forms.",
+      inputSchema: getProfileShape
     },
     getProfileTool
   )
