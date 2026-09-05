@@ -32,8 +32,8 @@ export function createApplyerMcpServer(): McpServer {
     {
       title: 'Get candidate profile',
       description:
-        "Returns the user's profile (name, contact info, desired roles, skills, salary expectations, etc.) and a list of their uploaded documents (resume, cover letter). Use this to judge whether a job is a good match and to fill application forms.",
-      inputSchema: getProfileShape
+        "Returns the user's profile (name, contact info, desired roles, skills, salary expectations, etc.) and a list of their uploaded documents (resume, cover letter). Use this to judge whether a job is a good match and to fill application forms."
+      ,inputSchema: getProfileShape
     },
     getProfileTool
   )
@@ -57,7 +57,7 @@ export function createApplyerMcpServer(): McpServer {
     {
       title: 'Search for jobs',
       description:
-        'Searches for job postings matching a query. Two kinds of source: LinkedIn and Indeed run a keyword search across every company, while greenhouse/lever/ashby/workday search the company boards the user tracks (see add_company_board / list_company_boards) — those providers have no cross-company search endpoint, so their coverage is exactly the tracked list and asking for them with nothing tracked returns a warning saying so. Defaults to all of them. Returns short snippets, not full descriptions.',
+        'Searches for job postings matching a query. Applyer Indonesia defaults to Indonesia-only search with JobStreet, LinkedIn, Indeed, and tracked Greenhouse/Lever/Ashby/Workday company boards. If no location is supplied, Indonesia is used. Results whose location cannot be confirmed as Indonesia are filtered while indonesiaOnly is enabled. Set indonesiaOnly=false only when the user explicitly asks for another country or worldwide results. Returns short snippets, not full descriptions.',
       inputSchema: searchJobsShape
     },
     searchJobsTool
@@ -68,7 +68,7 @@ export function createApplyerMcpServer(): McpServer {
     {
       title: 'Get full job posting details',
       description:
-        'Fetches the full description, location, and application info for a single job posting URL. Routes to the right source automatically (Greenhouse/Lever/Ashby use their public APIs; LinkedIn/Indeed/Workday/generic sites are read via a headless browser). May return a "blocked" status if the site presents a verification challenge.',
+        'Fetches the full description, location, salary when available, and application info for a single job posting URL. Routes to the right source automatically. JobStreet Indonesia has a dedicated browser scraper; Greenhouse/Lever/Ashby use public APIs; LinkedIn/Indeed/Workday/generic sites are read via browser automation. May return a "blocked" status if the site presents a verification challenge.',
       inputSchema: getJobDetailsShape
     },
     getJobDetailsTool
@@ -135,7 +135,7 @@ export function createApplyerMcpServer(): McpServer {
     {
       title: "Track a company's own job board",
       description:
-        "Adds a company's ATS board (Greenhouse, Lever, Ashby or Workday) to the list search_jobs fetches, so that company's postings are searchable even though it never posts to LinkedIn or Indeed — which is common for smaller and earlier-stage companies. " +
+        "Adds a company's ATS board (Greenhouse, Lever, Ashby or Workday) to the list search_jobs fetches, so that company's postings are searchable even when it does not reliably post to aggregators. " +
         'Pass `company` as a name ("Acme Labs"), a domain ("acme.com"), or a board URL; Applyer probes the providers and keeps the board with the most open roles rather than the first one that answers, because a company that migrated ATS often leaves the old, empty board live. ' +
         'Pass `provider` + `token` together only if you already know the exact slug. If your search established which ATS the company uses but not the slug, pass `provider` on its own: it is used as a preference, and a provider that actually has postings still wins over it. A Workday board can only be added by URL — it needs a host, tenant and site, not a single token. ' +
         'Use this when the user names companies they want watched, or when you have found the board of a company they are interested in. Adding a board is a standing instruction that costs one request per search, so add companies the user actually wants, not every company you come across.',
