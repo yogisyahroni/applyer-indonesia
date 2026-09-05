@@ -21,6 +21,8 @@ describe('accountProviderForUrl', () => {
 describe('account login detection', () => {
   it('detects login and verification routes used by supported platforms', () => {
     expect(isAccountLoginUrl('jobstreet', ACCOUNT_PROVIDER_META.jobstreet.loginUrl)).toBe(true)
+    expect(isAccountLoginUrl('jobstreet', 'https://id.jobstreet.com/id/oauth/login?returnUrl=%2Fid%2Fjobs')).toBe(true)
+    expect(isAccountLoginUrl('jobstreet', 'https://id.jobstreet.com/oauth/login')).toBe(true)
     expect(isAccountLoginUrl('linkedin', 'https://www.linkedin.com/checkpoint/challenge/123')).toBe(true)
     expect(isAccountLoginUrl('indeed', ACCOUNT_PROVIDER_META.indeed.loginUrl)).toBe(true)
   })
