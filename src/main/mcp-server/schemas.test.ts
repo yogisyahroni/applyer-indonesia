@@ -190,7 +190,8 @@ describe('updateProfileShape', () => {
     expect(updateProfileSchema.safeParse({ yearsExperience: 81 }).success).toBe(false)
     expect(updateProfileSchema.safeParse({ yearsExperience: -1 }).success).toBe(false)
     expect(updateProfileSchema.safeParse({ salaryMin: 1.5 }).success).toBe(false)
-    expect(updateProfileSchema.safeParse({ salaryMax: 10_000_001 }).success).toBe(false)
+    expect(updateProfileSchema.safeParse({ salaryMax: 30_000_000 }).success).toBe(true)
+    expect(updateProfileSchema.safeParse({ salaryMax: 10_000_000_001 }).success).toBe(false)
   })
 
   it('rejects an unknown remotePreference', () => {
