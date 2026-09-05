@@ -130,7 +130,7 @@ export function getAiTool(name: string): AiToolDefinition | undefined {
 }
 
 export function aiToolJsonSchema(tool: AiToolDefinition): Record<string, unknown> {
-  const schema = z.toJSONSchema(tool.schema) as Record<string, unknown>
-  const { $schema: _ignored, ...withoutMeta } = schema
-  return withoutMeta
+  const schema = { ...(z.toJSONSchema(tool.schema) as Record<string, unknown>) }
+  delete schema.$schema
+  return schema
 }
