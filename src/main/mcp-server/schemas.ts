@@ -7,7 +7,7 @@ import { getSettings } from '@shared/settings'
 
 const settings = getSettings()
 
-const jobSourceEnum = z.enum(['greenhouse', 'lever', 'ashby', 'workday', 'linkedin', 'indeed', 'generic'])
+const jobSourceEnum = z.enum(['greenhouse', 'lever', 'ashby', 'workday', 'linkedin', 'indeed', 'jobstreet', 'generic'])
 const jobStatusEnum = z.enum(['queued', 'filled', 'submitted', 'failed'])
 const remotePreferenceEnum = z.enum(['remote', 'hybrid', 'onsite', 'no_preference'])
 
@@ -17,6 +17,7 @@ export const searchJobsShape = {
   remote: z.boolean().optional(),
   jobType: z.enum(['full_time', 'part_time', 'contract', 'internship']).optional(),
   sources: z.array(jobSourceEnum).optional(),
+  indonesiaOnly: z.boolean().optional(),
   limit: z.number().int().min(1).max(SEARCH_JOBS_MAX_LIMIT).optional()
 }
 
