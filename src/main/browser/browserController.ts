@@ -237,8 +237,14 @@ export async function newHeadlessContext(): Promise<BrowserContext> {
   })
 }
 
+type HeadedContextOptions = {
+  storageState?: Awaited<ReturnType<BrowserContext['storageState']>>
+}
+
 /** Used for anything interactive (login, filling a form) — a real, visible window the user can watch and take over. Caller owns closing both. */
-export async function launchHeadedContext(): Promise<{ browser: Browser; context: BrowserContext }> {
+export async function launchHeadedContext(
+  options: HeadedContextOptions = {}
+): Promise<{ browser: Browser; context: BrowserContext }> {
   const browser = await launchWithResolution(false)
   const context = await browser.newContext({
     userAgent: REALISTIC_USER_AGENT,
@@ -247,7 +253,8 @@ export async function launchHeadedContext(): Promise<{ browser: Browser; context
     // regardless of the window's actual size — the headless context's fixed viewport (below)
     // is deliberately different, since that one is never resized by a human.
     viewport: null,
-    locale: 'en-US'
+    locale: 'en-US',
+    storageState: options.storageState
   })
   return { browser, context }
 }
