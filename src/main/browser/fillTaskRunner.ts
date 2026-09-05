@@ -6,6 +6,7 @@ import { getJob, setFilled, setBlocking } from '../db/repositories/jobsRepositor
 import { getProfile } from '../db/repositories/profileRepository'
 import { listDocuments, readDocumentBytes } from '../db/repositories/documentsRepository'
 import { launchHeadedContext } from './browserController'
+import { loadAccountStorageState } from './accountSessions'
 import { detectCaptcha } from './captchaDetector'
 import { fillForm } from './formFiller'
 import { openGate, resumeGate, isGateOpen, type GateOutcome } from './captchaGate'
@@ -15,6 +16,12 @@ import { screenshotsDir, tempDir } from '../config/paths'
 import { withStorageWriteLock } from '../storageWriteLock'
 import { mcpLogger } from '../logger'
 import type { ProfileFields } from '@shared/types/profile'
+import {
+  ACCOUNT_PROVIDER_META,
+  accountProviderForUrl,
+  isAccountLoginUrl,
+  type AccountProvider
+} from '@shared/types/accountConnection'
 
 export type FillTaskImmediateResult =
   | { status: 'filled'; jobId: string; screenshotPath: string; filledFields: string[]; skippedFields: string[] }
@@ -53,6 +60,13 @@ async function captureScreenshot(page: Page, jobId: string): Promise<string> {
 function failAndReturn(jobId: string, reasonTag: string, message: string): FillTaskImmediateResult {
   failJob(jobId, reasonTag, message)
   return { status: 'failed', jobId, reasonTag, message }
+}
+
+function loginRequiredMessage(provider: AccountProvider, expired = false): string {
+  const label = ACCOUNT_PROVIDER_META[provider].label
+  return expired
+    ? `${label} redirected this application to sign in, so the saved session is no longer valid. Reconnect ${label} in Settings > Accounts, then retry the job.`
+    : `${label} requires a signed-in account for this application flow. Connect ${label} in Settings > Accounts first, then retry the job.`
 }
 
 /**
@@ -158,11 +172,29 @@ export async function runFillTask(jobId: string): Promise<FillTaskImmediateResul
   }
 
   const targetUrl = job.applicationUrl || job.url
+  const accountProvider = accountProviderForUrl(targetUrl)
+  let storageState: ReturnType<typeof loadAccountStorageState> = null
+
+  if (accountProvider) {
+    try {
+      storageState = loadAccountStorageState(accountProvider)
+    } catch (err) {
+      return failAndReturn(
+        jobId,
+        'login_required',
+        `The saved ${ACCOUNT_PROVIDER_META[accountProvider].label} session could not be read: ${String(err)} Reconnect it in Settings > Accounts.`
+      )
+    }
+
+    if (!storageState && ACCOUNT_PROVIDER_META[accountProvider].requiresSessionForPlatformApply) {
+      return failAndReturn(jobId, 'login_required', loginRequiredMessage(accountProvider))
+    }
+  }
 
   let browser: Browser
   let context: BrowserContext
   try {
-    const headed = await launchHeadedContext()
+    const headed = await launchHeadedContext({ storageState: storageState ?? undefined })
     browser = headed.browser
     context = headed.context
   } catch (err) {
@@ -176,7 +208,13 @@ export async function runFillTask(jobId: string): Promise<FillTaskImmediateResul
     // Client-rendered application forms (Ashby, Workday) finish mounting fields shortly after load.
     await page.waitForTimeout(1500)
   } catch (err) {
+    await browser.close().catch(() => {})
     return failAndReturn(jobId, 'form_not_supported', `Failed to open the application page: ${String(err)}`)
+  }
+
+  if (accountProvider && storageState && isAccountLoginUrl(accountProvider, page.url())) {
+    await browser.close().catch(() => {})
+    return failAndReturn(jobId, 'login_required', loginRequiredMessage(accountProvider, true))
   }
 
   const captcha = await detectCaptcha(page)
