@@ -1,0 +1,41 @@
+name: Fix Windows DataTable casing once
+
+on:
+  push:
+    branches:
+      - feat/indonesia-mvp
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: ${{ github.event.head_commit.message == 'chore: execute windows casing fix' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Rename table logic module and update imports
+        shell: bash
+        run: |
+          git mv src/renderer/src/components/ui/dataTable.ts src/renderer/src/components/ui/dataTableLogic.ts
+          python - <<'PY'
+          from pathlib import Path
+          replacements = {
+              Path('src/renderer/src/components/ui/DataTable.tsx'): [("'./dataTable'", "'./dataTableLogic'")],
+              Path('src/renderer/src/components/ui/useSortableTable.ts'): [("'./dataTable'", "'./dataTableLogic'"), ('`dataTable.ts`', '`dataTableLogic.ts`')],
+              Path('src/renderer/src/components/ui/dataTable.test.ts'): [("'./dataTable'", "'./dataTableLogic'")],
+              Path('src/renderer/src/components/companyBoards/boardColumns.tsx'): [("'../ui/dataTable'", "'../ui/dataTableLogic'")],
+          }
+          for path, pairs in replacements.items():
+              text = path.read_text(encoding='utf-8')
+              for old, new in pairs:
+                  text = text.replace(old, new)
+              path.write_text(text, encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "fix: avoid Windows DataTable module collision"
+          git push origin HEAD:feat/indonesia-mvp
