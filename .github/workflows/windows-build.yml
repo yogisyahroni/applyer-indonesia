@@ -35,8 +35,13 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      # Several Vitest workers can import Electron at the same time on a fresh
+      # Windows runner. Electron then lazily extracts the same DLLs concurrently,
+      # which intermittently fails with ERROR_FILE_EXISTS (for example
+      # dxcompiler.dll). Serializing only the Windows CI suite removes that
+      # installer race without skipping any tests or changing application code.
       - name: Test on Windows
-        run: npm run test
+        run: npm run test -- --maxWorkers=1
 
       - name: Build Windows NSIS installer
         run: npm run package -- --win nsis --x64 --publish never
