@@ -84,7 +84,20 @@ export default function AccountsSection(): ReactElement {
   }
 
   useEffect(() => {
-    void refresh()
+    let cancelled = false
+    window.api.accountConnections
+      .list()
+      .then((result) => {
+        if (cancelled) return
+        setAccounts(result.accounts)
+        setError(null)
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setError(String(err))
+      })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const begin = async (provider: AccountProvider): Promise<void> => {
