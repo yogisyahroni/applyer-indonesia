@@ -1,0 +1,118 @@
+/*
+ * Design tokens — single source of truth for color/shadow/spacing primitives.
+ * Declared once via @theme (Tailwind v4 generates bg-canvas-inset, text-text,
+ * shadow-pop, etc. from these names), with the actual color values living in
+ * plain :root rules below so they can still be swapped at runtime for
+ * light/dark — Tailwind only needs the variable declared once to emit the
+ * utility; it doesn't care that the value changes later.
+ * Components must reference these via the generated utilities, never a raw
+ * hex/px value, so the whole app can be re-themed by editing only this file.
+ */
+
+@theme {
+  --color-canvas-inset: hsl(220 14% 10%);
+  --color-canvas: hsl(220 13% 13%);
+  --color-canvas-soft: hsl(220 12% 16%);
+  --color-canvas-raised: hsl(220 11% 19%);
+
+  --color-border: hsl(220 10% 27%);
+  --color-border-soft: hsl(220 10% 22%);
+
+  --color-text: hsl(220 15% 92%);
+  --color-text-muted: hsl(220 10% 68%);
+  --color-text-faint: hsl(220 8% 48%);
+
+  --color-accent: hsl(217 91% 60%);
+  --color-accent-fg: hsl(220 15% 98%);
+
+  --color-success: hsl(142 71% 45%);
+  --color-success-fg: hsl(220 15% 98%);
+  --color-warning: hsl(38 92% 50%);
+  --color-warning-fg: hsl(220 13% 13%);
+  --color-danger: hsl(0 72% 56%);
+  --color-danger-fg: hsl(220 15% 98%);
+
+  --shadow-pop: 0 4px 16px -4px rgb(0 0 0 / 0.45), 0 1px 0 0 rgb(0 0 0 / 0.2);
+  --shadow-overlay: 0 16px 48px -12px rgb(0 0 0 / 0.55), 0 1px 0 0 rgb(0 0 0 / 0.2);
+
+  --spacing-nav: 2.75rem;
+}
+
+/*
+ * Light theme override. The ramp keeps the same shape as the dark one —
+ * inset is the recessed page background, raised is the top surface (cards,
+ * popovers, modals), with ~3-4 points of lightness between each step — so
+ * `bg-canvas-raised` still reads as a distinct surface sitting on top of a
+ * `bg-canvas-inset` page. Seams then have to be *darker* than the darkest
+ * surface: both border tokens sit below `--color-canvas-inset`, mirroring
+ * the way both sit above `--color-canvas-raised` in the dark theme. Keeping
+ * a border within a point or two of a surface (a 90% border on a 91% page)
+ * erases the 1px seams the whole design leans on for depth.
+ */
+:root[data-theme='light'] {
+  --color-canvas-inset: hsl(220 20% 90%);
+  --color-canvas: hsl(220 22% 94%);
+  --color-canvas-soft: hsl(220 25% 97%);
+  --color-canvas-raised: hsl(0 0% 100%);
+
+  --color-border: hsl(220 14% 75%);
+  --color-border-soft: hsl(220 14% 82%);
+
+  --color-text: hsl(220 25% 12%);
+  --color-text-muted: hsl(220 10% 40%);
+  --color-text-faint: hsl(220 8% 58%);
+
+  --color-accent: hsl(217 91% 48%);
+  --color-accent-fg: hsl(0 0% 100%);
+
+  --color-success: hsl(142 65% 34%);
+  --color-success-fg: hsl(0 0% 100%);
+  --color-warning: hsl(32 90% 40%);
+  --color-warning-fg: hsl(0 0% 100%);
+  --color-danger: hsl(0 65% 45%);
+  --color-danger-fg: hsl(0 0% 100%);
+
+  --shadow-pop: 0 4px 16px -4px rgb(0 0 0 / 0.14), 0 1px 0 0 rgb(0 0 0 / 0.04);
+  --shadow-overlay: 0 16px 48px -12px rgb(0 0 0 / 0.22), 0 1px 0 0 rgb(0 0 0 / 0.04);
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-text);
+}
+
+/*
+ * Scrollbars — thin, tracks transparent into whatever surface they sit on
+ * (matching the "depth from seams, not chrome" rule), thumb lights up to
+ * the accent color on hover/drag like ResizeHandle's seam does. Electron's
+ * renderer is always Chromium, so the ::-webkit-scrollbar rules are what
+ * actually render; the standard properties are a no-cost fallback.
+ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border: 2px solid transparent;
+  border-radius: 2px;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-accent);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
