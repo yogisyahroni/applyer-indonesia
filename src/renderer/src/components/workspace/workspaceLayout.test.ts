@@ -78,6 +78,11 @@ describe('parseWorkspaceLayout', () => {
     expect(parseWorkspaceLayout(layout)).toEqual(layout)
   })
 
+  it('accepts the direct AI dock tab', () => {
+    const layout = { ...DEFAULT_WORKSPACE_LAYOUT, dockTab: 'ai' }
+    expect(parseWorkspaceLayout(layout).dockTab).toBe('ai')
+  })
+
   it('falls back field-by-field: bad dockTab does not discard other valid fields', () => {
     const result = parseWorkspaceLayout({ sidebarVisible: false, dockTab: 'not-a-tab' })
     expect(result.sidebarVisible).toBe(false)
