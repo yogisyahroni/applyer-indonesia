@@ -5,7 +5,7 @@ import Tag from '../ui/Tag'
 import Tooltip from '../ui/Tooltip'
 import { useFormatters } from '../../i18n/format'
 import { boardAddress, boardStatus, boardStatusRank, type BoardStatus } from './boardStatus'
-import type { DataTableColumn } from '../ui/DataTable'
+import type { DataTableColumn } from '../ui/DataGrid'
 import type { CellAccessors } from '../ui/dataTable'
 import type { CompanyBoardRecord } from '@shared/types/companyBoard'
 
