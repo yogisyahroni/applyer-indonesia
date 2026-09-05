@@ -1,6 +1,6 @@
 import type { AiConnectionTestResult } from '@shared/types/ai'
 import { getResolvedDirectAiConfig } from './config'
-import { anthropicMessage, openAiChat } from './providerClient'
+import { anthropicMessage, openAiChat, openAiResponse } from './providerClient'
 
 export async function testAiConnection(): Promise<AiConnectionTestResult> {
   const started = Date.now()
@@ -8,6 +8,23 @@ export async function testAiConnection(): Promise<AiConnectionTestResult> {
     const config = getResolvedDirectAiConfig()
     if (config.mode === 'openai' && !config.apiKey) throw new Error('OpenAI API requires an API key.')
     if (config.mode === 'anthropic' && !config.apiKey) throw new Error('Anthropic API requires an API key.')
+
+    if (config.mode === 'openai') {
+      const response = await openAiResponse(
+        config,
+        'You are a connection test. Reply only with OK.',
+        'OK?',
+        undefined,
+        undefined,
+        16
+      )
+      return {
+        success: true,
+        message: response.text || 'Connected.',
+        latencyMs: Date.now() - started,
+        model: config.model
+      }
+    }
 
     if (config.mode === 'anthropic') {
       const response = await anthropicMessage(
