@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   bootstrap:
+    if: ${{ github.event.head_commit.message == 'chore: execute upstream import' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout target repository
@@ -23,8 +24,10 @@ jobs:
       - name: Import upstream working tree
         shell: bash
         run: |
-          rsync -a --delete --exclude '.git' "$RUNNER_TEMP/applyer-upstream/" ./
-          rm -f .github/workflows/bootstrap-upstream.yml
+          rsync -a --delete \
+            --exclude '.git' \
+            --exclude '.github/workflows/' \
+            "$RUNNER_TEMP/applyer-upstream/" ./
 
       - name: Commit imported baseline
         shell: bash
