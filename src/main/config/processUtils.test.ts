@@ -1,4 +1,7 @@
 import { describe, it, expect } from 'vitest'
+import { mkdtempSync, realpathSync, rmSync } from 'fs'
+import { tmpdir } from 'os'
+import { join } from 'path'
 import { runCommand, commandExists } from './processUtils'
 
 describe('runCommand', () => {
@@ -28,10 +31,20 @@ describe('runCommand', () => {
   })
 
   it('runs the child process in the given cwd', async () => {
-    const result = await runCommand(process.execPath, ['-e', 'process.stdout.write(process.cwd())'], { cwd: '/tmp' })
-    expect(result.code).toBe(0)
-    // Resolve symlinks (e.g. macOS /tmp -> /private/tmp) rather than assuming string equality.
-    expect(result.stdout.endsWith('tmp')).toBe(true)
+    const cwd = mkdtempSync(join(tmpdir(), 'applyer-process-utils-'))
+    try {
+      const result = await runCommand(process.execPath, ['-e', 'process.stdout.write(process.cwd())'], { cwd })
+      expect(result.code).toBe(0)
+      // Compare canonical paths rather than POSIX-only spellings such as /tmp;
+      // Windows may also normalize drive-letter casing or short/long path names.
+      const actual = realpathSync(result.stdout)
+      const expected = realpathSync(cwd)
+      expect(process.platform === 'win32' ? actual.toLowerCase() : actual).toBe(
+        process.platform === 'win32' ? expected.toLowerCase() : expected
+      )
+    } finally {
+      rmSync(cwd, { recursive: true, force: true })
+    }
   })
 
   it('passes the given env to the child process', async () => {
