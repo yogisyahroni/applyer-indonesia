@@ -77,6 +77,13 @@ export const IPC = {
     cancel: 'accountConnections:cancel',
     disconnect: 'accountConnections:disconnect'
   },
+  ai: {
+    getConfig: 'ai:getConfig',
+    saveConfig: 'ai:saveConfig',
+    clearApiKey: 'ai:clearApiKey',
+    testConnection: 'ai:testConnection',
+    runTask: 'ai:runTask'
+  },
   browserControl: {
     resumeTask: 'browser:resumeTask',
     cancelTask: 'browser:cancelTask',
