@@ -96,6 +96,10 @@ describe('resolveCustomStorageRoot', () => {
       blockingTaskId: null
     })
 
+    // Windows does not allow deleting an SQLite database while its handle is
+    // still open. Close the same module-level connection production code owns
+    // before removing this test-only storage root.
+    dbModule.closeDatabase()
     rmSync(customRoot, { recursive: true, force: true })
   })
 
@@ -113,6 +117,7 @@ describe('resolveCustomStorageRoot', () => {
     expect(getStorageRecoveryState().needed).toBe(false)
 
     logSpy.mockRestore()
+    dbModule.closeDatabase()
     rmSync(customRoot, { recursive: true, force: true })
   })
 })
