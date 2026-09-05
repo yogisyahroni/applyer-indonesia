@@ -13,6 +13,7 @@ import { registerCompanyBoardsIpc } from './ipc/companyBoards'
 import { registerProfileIpc } from './ipc/profile'
 import { registerOnboardingIpc } from './ipc/onboarding'
 import { registerAccountConnectionsIpc } from './ipc/accountConnections'
+import { registerAiIpc } from './ipc/ai'
 import { registerBrowserControlIpc } from './ipc/browserControl'
 import { registerBrowserSetupIpc } from './ipc/browserSetup'
 import { registerSettingsIpc } from './ipc/settings'
@@ -89,6 +90,7 @@ function initializeApp(): void {
   registerProfileIpc()
   registerOnboardingIpc()
   registerAccountConnectionsIpc()
+  registerAiIpc()
   registerBrowserControlIpc()
   registerBrowserSetupIpc()
   registerSettingsIpc()
