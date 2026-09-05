@@ -68,14 +68,15 @@ export async function searchJobStreet(
         document.querySelectorAll('a[data-automation="job-list-view-job-link"], a[href*="/id/job/"], a[href*="/job/"]')
       )
         .map((anchor) => anchor.closest('article') ?? anchor.parentElement)
-        .filter((node): node is Element => node !== null)
+        .filter((node) => node !== null)
 
       const nodes = directCards.length > 0 ? directCards : Array.from(new Set(fallbackCards))
 
       return nodes.map((node) => {
-        const anchor =
-          node.querySelector<HTMLAnchorElement>('a[data-automation="job-list-view-job-link"]') ??
-          node.querySelector<HTMLAnchorElement>('a[href*="/id/job/"], a[href*="/job/"]')
+        const anchor = (
+          node.querySelector('a[data-automation="job-list-view-job-link"]') ??
+          node.querySelector('a[href*="/id/job/"], a[href*="/job/"]')
+        ) as HTMLAnchorElement | null
 
         return {
           href: anchor?.getAttribute('href') ?? undefined,
