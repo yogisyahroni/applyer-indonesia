@@ -17,7 +17,8 @@ export type LocaleCode = (typeof SUPPORTED_LOCALES)[number]['code']
 /** What the user picked. 'system' defers to the OS/browser language list. */
 export type LocalePreference = 'system' | LocaleCode
 
-export const FALLBACK_LOCALE: LocaleCode = 'en'
+/** Applyer Indonesia defaults to Bahasa Indonesia when the OS locale is unsupported. */
+export const FALLBACK_LOCALE: LocaleCode = 'id'
 export const LOCALE_STORAGE_KEY = 'applyer:locale:v1'
 
 const SUPPORTED_CODES: readonly string[] = SUPPORTED_LOCALES.map((l) => l.code)
