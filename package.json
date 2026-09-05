@@ -1,14 +1,15 @@
 {
   "name": "applyer",
   "version": "0.1.0",
-  "description": "Local Electron app for autonomous job hunting via CLI agents (Claude Code, Codex, etc.)",
+  "productName": "Applyer Indonesia",
+  "description": "Local Electron app for AI-assisted job hunting in Indonesia, with JobStreet, LinkedIn, Indeed, and ATS board support",
   "main": "./out/main/index.js",
-  "desktopName": "com.applyer.app.desktop",
-  "author": "xCirno1",
+  "desktopName": "com.applyer.indonesia.desktop",
+  "author": "xCirno1 and Applyer Indonesia contributors",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/xCirno1/applyer.git"
+    "url": "git+https://github.com/yogisyahroni/applyer-indonesia.git"
   },
   "private": true,
   "type": "module",
@@ -66,7 +67,7 @@
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^22.10.2",
     "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.4",
+    "@types/react-dom": "^19.2.8",
     "@types/sanitize-html": "^2.16.1",
     "@vitejs/plugin-react": "^5.2.0",
     "cross-env": "^10.1.0",
@@ -86,8 +87,8 @@
     "vitest": "^4.1.11"
   },
   "build": {
-    "appId": "com.applyer.app",
-    "productName": "Applyer",
+    "appId": "com.applyer.indonesia",
+    "productName": "Applyer Indonesia",
     "directories": {
       "output": "release"
     },
@@ -99,7 +100,8 @@
       "!**/node_modules/@napi-rs/canvas*/**"
     ],
     "electronLanguages": [
-      "en-US"
+      "en-US",
+      "id"
     ],
     "asar": true,
     "asarUnpack": [
