@@ -8,6 +8,10 @@ import { logActivity } from '../db/repositories/activityLogRepository'
 import { MAX_DOCUMENT_SIZE_BYTES } from '@shared/constants'
 import type { UploadDocumentRequest } from '@shared/types/ipcEvents'
 
+// Currency-agnostic upper bound. The upstream 10M cap was too small for IDR
+// salary expectations even for ordinary professional roles.
+const MAX_SALARY_VALUE = 10_000_000_000
+
 const profileFieldsSchema = z.object({
   fullName: z.string().max(200),
   email: z.union([z.literal(''), z.string().email()]),
@@ -20,8 +24,8 @@ const profileFieldsSchema = z.object({
   desiredRoles: z.array(z.string().max(100)).max(20),
   desiredLocations: z.array(z.string().max(200)).max(20),
   remotePreference: z.enum(['remote', 'hybrid', 'onsite', 'no_preference']),
-  salaryMin: z.number().int().min(0).max(10_000_000).nullable(),
-  salaryMax: z.number().int().min(0).max(10_000_000).nullable(),
+  salaryMin: z.number().int().min(0).max(MAX_SALARY_VALUE).nullable(),
+  salaryMax: z.number().int().min(0).max(MAX_SALARY_VALUE).nullable(),
   salaryCurrency: z.string().max(10),
   yearsExperience: z.number().int().min(0).max(80).nullable(),
   summary: z.string().max(5000),
