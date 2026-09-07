@@ -136,10 +136,6 @@
         "nsis"
       ]
     },
-    "publish": {
-      "provider": "github",
-      "releaseName": "Applyer Indonesia v${version}"
-    },
     "update": {
       "enabled": true,
       "interval": "1h",
