@@ -47,7 +47,7 @@ jobs:
         run: npm run test -- --maxWorkers=1
 
       - name: Build Windows NSIS installer
-        run: npm run package -- --win nsis --x64 --publish never
+        run: npm run package -- --win nsis --x64 --publish github
 
       - name: Upload Windows installer
         uses: actions/upload-artifact@v4
