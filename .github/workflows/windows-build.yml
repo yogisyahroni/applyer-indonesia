@@ -56,3 +56,21 @@ jobs:
             release/latest*.yml
           if-no-files-found: error
           retention-days: 14
+
+      - name: Create GitHub Release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: Applyer Indonesia v${{ github.run_number }}
+          body: |
+            Release for Applyer Indonesia
+            Built on ${{ github.run_date }}
+
+            This release contains the Windows NSIS installer for Applyer Indonesia.
+          files: |
+            release/*.exe
+            release/*.blockmap
+            release/latest*.yml
+          draft: false
+          prerelease: false
