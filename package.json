@@ -135,12 +135,6 @@
       "target": [
         "nsis"
       ]
-    },
-    "update": {
-      "enabled": true,
-      "interval": "1h",
-      "releaseName": "Applyer Indonesia v${version}",
-      "homepage": "https://github.com/yogisyahroni/applyer-indonesia/releases"
     }
   }
 }
