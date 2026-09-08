@@ -143,4 +143,10 @@
       "releaseName": "Applyer Indonesia v${version}",
       "homepage": "https://github.com/yogisyahroni/applyer-indonesia/releases"
     }
+    ,"publish": {
+      "provider": "github",
+      "owner": "yogisyahroni",
+      "repo": "applyer-indonesia",
+      "releaseType": "release"
+    }
 }

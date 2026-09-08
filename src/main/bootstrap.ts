@@ -18,7 +18,7 @@ import { registerBrowserControlIpc } from './ipc/browserControl'
 import { registerBrowserSetupIpc } from './ipc/browserSetup'
 import { registerSettingsIpc } from './ipc/settings'
 import { registerLogsIpc } from './ipc/logs'
-import { registerAppIpc } from './ipc/app'
+import { registerAppIpc, initializeAutoUpdater } from './ipc/app'
 import { registerClipboardIpc } from './ipc/clipboard'
 import { registerDataTransferIpc } from './ipc/dataTransfer'
 import { registerStorageLocationIpc } from './ipc/storageLocation'
@@ -96,6 +96,7 @@ function initializeApp(): void {
   registerSettingsIpc()
   registerLogsIpc()
   registerAppIpc()
+  initializeAutoUpdater()
   registerClipboardIpc()
   registerDataTransferIpc()
   registerStorageLocationIpc()

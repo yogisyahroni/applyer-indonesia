@@ -379,7 +379,15 @@ const logsApi = {
 }
 
 const appApi = {
-  getInfo: (): Promise<AppInfo> => ipcRenderer.invoke(IPC.app.getInfo)
+  getInfo: (): Promise<AppInfo> => ipcRenderer.invoke(IPC.app.getInfo),
+  checkForUpdates: (): Promise<unknown> => ipcRenderer.invoke(IPC.app.checkForUpdates),
+  downloadUpdate: (): Promise<{ ok: boolean; error?: string }> => ipcRenderer.invoke(IPC.app.downloadUpdate),
+  installUpdate: (): Promise<{ ok: boolean }> => ipcRenderer.invoke(IPC.app.installUpdate),
+  onUpdate: (listener: (payload: unknown) => void): (() => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, payload: unknown): void => listener(payload)
+    ipcRenderer.on(IPC.app.onUpdate, handler)
+    return () => ipcRenderer.removeListener(IPC.app.onUpdate, handler)
+  }
 }
 
 const dataApi = {
