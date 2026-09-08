@@ -105,7 +105,10 @@ export function listAccountConnectionStatuses(): AccountConnectionStatus[] {
 export async function beginAccountConnection(provider: AccountProvider): Promise<AccountConnectionStatus> {
   await cancelAccountConnection(provider)
 
-  const { browser, context } = await launchHeadedContext()
+  // Try to load existing session so the browser can reuse cookies
+  const savedState = loadAccountStorageState(provider)
+
+  const { browser, context } = await launchHeadedContext({ storageState: savedState ?? undefined })
   pendingConnections.set(provider, { browser, context })
 
   const page = await context.newPage()
