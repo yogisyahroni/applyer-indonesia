@@ -51,6 +51,7 @@ export function playwrightBrowsersDir(): string {
 }
 
 export function mcpSocketPath(): string {
+  if (process.env.APPLYER_MCP_SOCKET_PATH) return process.env.APPLYER_MCP_SOCKET_PATH
   if (process.platform === 'win32') {
     return '\\\\.\\pipe\\applyer-mcp'
   }

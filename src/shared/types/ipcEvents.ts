@@ -249,9 +249,9 @@ export type BrowserSetupStatusPayload =
  * launching fails with an explanatory error instead of silently trying something else,
  * since the user explicitly chose it.
  */
-export type BrowserPreference = 'auto' | 'chrome' | 'msedge' | 'managed'
+export type BrowserPreference = 'auto' | 'active' | 'chrome' | 'msedge' | 'managed'
 
-export type ResolvedBrowserKind = 'unresolved' | 'dev-bundled' | 'chrome' | 'msedge' | 'managed'
+export type ResolvedBrowserKind = 'unresolved' | 'active' | 'dev-bundled' | 'chrome' | 'msedge' | 'managed'
 
 export interface ResolvedBrowserStatus {
   /** Whether this is a packaged build — the preference only affects resolution when true; a dev build always uses the bundled browser. */

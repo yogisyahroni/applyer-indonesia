@@ -139,6 +139,7 @@ describe('autoConfigureMcp', () => {
 describe('verifyMcpConnection', () => {
   it('returns success:false (not a thrown error) when the configured command cannot be spawned/connected to', async () => {
     __setPackaged(false)
+    process.env.APPLYER_MCP_SOCKET_PATH = `\\\\.\\pipe\\applyer-test-${process.pid}-${Date.now()}`
     // Dev-mode invocation points `node` at resources/mcp-bridge.mjs under
     // app.getAppPath(), which our electron mock sets to process.cwd() (the
     // real repo root) — that file exists for real, but nothing is listening
@@ -148,5 +149,6 @@ describe('verifyMcpConnection', () => {
     const result = await verifyMcpConnection()
     expect(result.success).toBe(false)
     expect(result.error).toBeTruthy()
+    delete process.env.APPLYER_MCP_SOCKET_PATH
   }, 15000)
 })
