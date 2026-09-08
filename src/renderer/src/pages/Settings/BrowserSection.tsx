@@ -7,6 +7,7 @@ import type { BrowserPreference, ResolvedBrowserStatus } from '@shared/types/ipc
 
 const KIND_KEYS = {
   unresolved: 'browser.kindUnresolved',
+  active: 'browser.kindActive',
   'dev-bundled': 'browser.kindDevBundled',
   chrome: 'browser.kindChrome',
   msedge: 'browser.kindMsedge',
@@ -39,6 +40,7 @@ export default function BrowserSection(): ReactElement {
 
   const preferenceOptions = [
     { value: 'auto', label: t('browser.optionAuto') },
+    { value: 'active', label: t('browser.optionActive') },
     { value: 'chrome', label: t('browser.optionChrome') },
     { value: 'msedge', label: t('browser.optionEdge') },
     { value: 'managed', label: t('browser.optionManaged') }

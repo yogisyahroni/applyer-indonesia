@@ -12,11 +12,13 @@ import { getBrowserPreference } from '../db/repositories/settingsRepository'
 import type { ResolvedBrowserStatus } from '@shared/types/ipcEvents'
 
 const PREFERENCE_LABELS = { chrome: 'System Chrome', msedge: 'System Edge' } as const
+const DEFAULT_CDP_PORT = 9222
 
 const REALISTIC_USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
 
 let headlessBrowser: Browser | null = null
+let activeBrowser: Browser | null = null
 
 // Playwright resolves/caches PLAYWRIGHT_BROWSERS_PATH at the moment its module is
 // first imported, not on every launch call — so the env var must be set right before
@@ -98,14 +100,30 @@ async function launchWithResolution(headless: boolean): Promise<Browser> {
   // rather than leaving the user to manually resize/reposition it every time.
   const args = headless ? undefined : ['--start-maximized']
 
+  const preference = getBrowserPreference()
+
+  if (preference === 'active') {
+    const port = Number.parseInt(process.env.APPLYER_CDP_PORT ?? String(DEFAULT_CDP_PORT), 10)
+    const endpoint = `http://127.0.0.1:${Number.isFinite(port) ? port : DEFAULT_CDP_PORT}`
+    try {
+      activeBrowser = await chromium.connectOverCDP(endpoint)
+      resolvedLaunchOptions = { channel: undefined }
+      return activeBrowser
+    } catch (err) {
+      throw new Error(
+        `Tidak dapat terhubung ke browser aktif melalui CDP (${endpoint}). ` +
+          `Jalankan Chrome/Edge dengan --remote-debugging-port=${Number.isFinite(port) ? port : DEFAULT_CDP_PORT} ` +
+          `dan pastikan tidak memakai profil yang sedang terkunci, lalu coba lagi. Detail: ${String(err)}`
+      )
+    }
+  }
+
   if (!app.isPackaged) {
     return chromium.launch({ headless, args })
   }
   if (resolvedLaunchOptions) {
     return chromium.launch({ headless, args, ...resolvedLaunchOptions })
   }
-
-  const preference = getBrowserPreference()
 
   if (preference !== 'managed') {
     const channels = preference === 'auto' ? (['chrome', 'msedge'] as const) : ([preference] as const)
@@ -152,6 +170,7 @@ export function invalidateResolvedBrowser(): void {
 /** What Settings > Browser shows as the currently active browser. */
 export function getResolvedBrowserStatus(): ResolvedBrowserStatus {
   const packaged = app.isPackaged
+  if (activeBrowser?.isConnected()) return { packaged, kind: 'active', executablePath: null }
   if (!chromiumModule) return { packaged, kind: 'unresolved', executablePath: null }
   if (!packaged) return { packaged, kind: 'dev-bundled', executablePath: chromiumModule.executablePath() }
   if (resolvedLaunchOptions?.channel) return { packaged, kind: resolvedLaunchOptions.channel, executablePath: null }
@@ -246,7 +265,9 @@ export async function launchHeadedContext(
   options: HeadedContextOptions = {}
 ): Promise<{ browser: Browser; context: BrowserContext }> {
   const browser = await launchWithResolution(false)
-  const context = await browser.newContext({
+  const context = activeBrowser === browser
+    ? browser.contexts()[0] ?? await browser.newContext()
+    : await browser.newContext({
     userAgent: REALISTIC_USER_AGENT,
     // null (not a fixed size) lets the page's rendering area follow the real OS window as the
     // user drags/resizes it, instead of Playwright pinning content to a fixed viewport
@@ -268,6 +289,9 @@ export async function closeAllBrowsers(): Promise<void> {
     }
     headlessBrowser = null
   }
+  if (activeBrowser) {
+    activeBrowser = null
+  }
 }
 
 /** Test-only: true while a managed-download confirmation prompt is awaiting an answer. */
@@ -281,6 +305,7 @@ export function __resetBrowserControllerForTests(): void {
   chromiumModule = null
   chromiumImportPromise = null
   resolvedLaunchOptions = null
+  activeBrowser = null
   downloadPromise = null
   installConfirmationResolver = null
   installConfirmationPromise = null

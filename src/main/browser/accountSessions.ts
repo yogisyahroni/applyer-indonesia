@@ -21,6 +21,18 @@ interface PendingConnection {
 const pendingConnections = new Map<AccountProvider, PendingConnection>()
 const volatileStates = new Map<AccountProvider, { state: StoredBrowserState; updatedAt: string }>()
 
+/** URL alone is unreliable: providers often leave /login in the URL during OAuth/2FA.
+ * Require a session cookie and, when available, a page-level signed-in indicator. */
+export async function isAuthenticatedPage(provider: AccountProvider, page: import('playwright').Page): Promise<boolean> {
+  const cookies = await page.context().cookies()
+  const domain = ACCOUNT_PROVIDER_META[provider].loginUrl
+  const relevant = cookies.filter((cookie) => cookie.domain && new URL(domain).hostname.endsWith(cookie.domain.replace(/^\./, '')))
+  if (relevant.length === 0) return false
+  if (!isAccountLoginUrl(provider, page.url())) return true
+  const text = await page.locator('body').innerText({ timeout: 1500 }).catch(() => '')
+  return /sign out|log out|logout|profile|my account|akun saya|keluar/i.test(text)
+}
+
 function sessionsDir(): string {
   const dir = join(app.getPath('userData'), 'account-sessions')
   mkdirSync(dir, { recursive: true, mode: 0o700 })
@@ -127,7 +139,7 @@ export async function saveAccountConnection(provider: AccountProvider): Promise<
 
   const pages = pending.context.pages()
   const currentPage = pages.at(-1)
-  if (!currentPage || isAccountLoginUrl(provider, currentPage.url())) {
+  if (!currentPage || !(await isAuthenticatedPage(provider, currentPage))) {
     throw new Error(`Finish signing in to ${ACCOUNT_PROVIDER_META[provider].label} in the browser before saving the session.`)
   }
 

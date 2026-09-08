@@ -82,7 +82,7 @@ export function setIndexedJobsRetentionDays(value: IndexedJobsRetention): void {
 
 export function getBrowserPreference(): BrowserPreference {
   const value = getSetting(BROWSER_PREFERENCE_KEY)
-  return value === 'chrome' || value === 'msedge' || value === 'managed' ? value : 'auto'
+  return value === 'active' || value === 'chrome' || value === 'msedge' || value === 'managed' ? value : 'auto'
 }
 
 export function setBrowserPreference(preference: BrowserPreference): void {
