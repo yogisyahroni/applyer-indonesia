@@ -28,7 +28,7 @@
     "test": "cross-env NODE_OPTIONS=--no-experimental-webstorage vitest run",
     "test:watch": "cross-env NODE_OPTIONS=--no-experimental-webstorage vitest",
     "test:site": "tsx scripts/test-site.ts",
-    "package": "npm run build && electron-builder"
+    "package": "npm run build && electron-builder --config.npmRebuild=false"
   },
   "dependencies": {
     "@codemirror/lang-css": "^6.3.1",
