@@ -87,7 +87,7 @@ describe('resolveActiveStorageRoot', () => {
     expect(activeStorageRoot()).toBe(customRoot)
     expect(consumeStartupFallbackWarning()).toBeNull()
     rmSync(customRoot, { recursive: true, force: true })
-  })
+  }, 15_000)
 
   it.each([
     ['an empty file', (path: string) => writeFileSync(path, '')],

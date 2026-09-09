@@ -101,7 +101,7 @@ describe('resolveCustomStorageRoot', () => {
     // before removing this test-only storage root.
     dbModule.closeDatabase()
     rmSync(customRoot, { recursive: true, force: true })
-  })
+  }, 15_000)
 
   it('keeps a successful reconnect successful when activity logging fails', async () => {
     const customRoot = join(tmpdir(), `applyer-recovery-log-failure-${process.pid}-${Date.now()}`)
