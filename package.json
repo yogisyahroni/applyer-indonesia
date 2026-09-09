@@ -1,6 +1,6 @@
 {
   "name": "applyer",
-  "version": "0.1.0",
+  "version": "0.1.7",
   "productName": "Applyer Indonesia",
   "description": "Local Electron app for AI-assisted job hunting in Indonesia, with JobStreet, LinkedIn, Indeed, and ATS board support",
   "main": "./out/main/index.js",
