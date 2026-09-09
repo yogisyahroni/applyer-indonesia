@@ -1,6 +1,8 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
-import { autoUpdater } from 'electron-updater'
+import electronUpdater from 'electron-updater'
 import { IPC, type AppInfo } from '@shared/types/ipcEvents'
+
+const { autoUpdater } = electronUpdater
 
 export function registerAppIpc(): void {
   ipcMain.handle(
