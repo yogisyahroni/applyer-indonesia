@@ -2,6 +2,7 @@ name: Windows Build
 
 on:
   push:
+    branches: ['codex/**']
     tags: ['v*.*.*']
   workflow_dispatch:
     inputs:
@@ -36,6 +37,7 @@ jobs:
         run: |
           VERSION="${TAG_VERSION#v}"
           if [ -z "$VERSION" ]; then VERSION="$INPUT_VERSION"; fi
+          if [ -z "$VERSION" ]; then VERSION=$(node -p "require('./package.json').version"); fi
           if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$ ]]; then
             echo "Invalid release version: $VERSION"
             exit 1
