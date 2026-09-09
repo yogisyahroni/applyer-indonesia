@@ -4,6 +4,14 @@
 // below the assignment, like ./bootstrap.
 import { applyDevUserDataDir } from './config/userDataDir'
 import { loadUserSettings } from './config/settings'
+import { appLogger } from './logger'
+
+process.on('uncaughtException', (error) => {
+  appLogger.error(`Fatal startup error: ${String(error)}`)
+})
+process.on('unhandledRejection', (reason) => {
+  appLogger.error(`Unhandled startup rejection: ${String(reason)}`)
+})
 
 // Must be set before playwright's `chromium` is imported anywhere in the app
 // (browserController.ts) — this makes it resolve browsers bundled inside

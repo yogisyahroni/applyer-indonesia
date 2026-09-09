@@ -2,6 +2,7 @@ import { app, BrowserWindow, shell } from 'electron'
 import { join } from 'path'
 import { is } from '@electron-toolkit/utils'
 import { encodedSettingsArgument } from './config/settings'
+import { appLogger } from './logger'
 
 // Not __dirname-relative — this module can end up bundled into a
 // dynamically-imported chunk under out/main/chunks/, which breaks a path
@@ -37,6 +38,10 @@ export function createMainWindow(): BrowserWindow {
   })
 
   window.on('ready-to-show', () => {
+    window.show()
+  })
+  window.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
+    appLogger.error(`Renderer failed to load (${errorCode}): ${errorDescription} - ${validatedURL}`)
     window.show()
   })
 

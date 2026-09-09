@@ -57,6 +57,9 @@ jobs:
       - name: Rebuild native modules for Electron
         run: npx electron-rebuild -f -w better-sqlite3,node-pty
 
+      - name: Verify Electron production dependencies
+        run: npx electron-builder install-app-deps
+
       - name: Lint
         run: npm run lint
 
