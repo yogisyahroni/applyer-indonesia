@@ -2,6 +2,7 @@ import type { Browser, BrowserContext } from 'playwright'
 import { app } from 'electron'
 import { existsSync } from 'fs'
 import { createRequire } from 'module'
+import { connect } from 'net'
 import { dirname, join } from 'path'
 import { appLogger } from '../logger'
 import { playwrightBrowsersDir } from '../config/paths'
@@ -13,6 +14,7 @@ import type { ResolvedBrowserStatus } from '@shared/types/ipcEvents'
 
 const PREFERENCE_LABELS = { chrome: 'System Chrome', msedge: 'System Edge' } as const
 const DEFAULT_CDP_PORT = 9222
+const COMMON_CDP_PORTS = [9222, 9223, 9224, 9515]
 
 const REALISTIC_USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
@@ -31,6 +33,26 @@ let chromiumModule: typeof import('playwright').chromium | null = null
 // Dedupes the import itself (not just its result) so concurrent first-callers share
 // one `import('playwright')` call rather than each racing their own.
 let chromiumImportPromise: Promise<typeof import('playwright').chromium> | null = null
+
+function cdpPortIsOpen(port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const socket = connect({ host: '127.0.0.1', port })
+    const finish = (open: boolean): void => {
+      socket.destroy()
+      resolve(open)
+    }
+    socket.once('connect', () => finish(true))
+    socket.once('error', () => finish(false))
+    socket.setTimeout(250, () => finish(false))
+  })
+}
+
+async function findActiveCdpPort(): Promise<number> {
+  const configured = Number.parseInt(process.env.APPLYER_CDP_PORT ?? '', 10)
+  const ports = Number.isFinite(configured) ? [configured, ...COMMON_CDP_PORTS.filter((port) => port !== configured)] : COMMON_CDP_PORTS
+  const results = await Promise.all(ports.map(async (port) => ({ port, open: await cdpPortIsOpen(port) })))
+  return results.find((result) => result.open)?.port ?? (Number.isFinite(configured) ? configured : DEFAULT_CDP_PORT)
+}
 
 async function getChromium(): Promise<typeof import('playwright').chromium> {
   if (chromiumModule) return chromiumModule
@@ -103,8 +125,8 @@ async function launchWithResolution(headless: boolean): Promise<Browser> {
   const preference = getBrowserPreference()
 
   if (preference === 'active') {
-    const port = Number.parseInt(process.env.APPLYER_CDP_PORT ?? String(DEFAULT_CDP_PORT), 10)
-    const endpoint = `http://127.0.0.1:${Number.isFinite(port) ? port : DEFAULT_CDP_PORT}`
+    const port = await findActiveCdpPort()
+    const endpoint = `http://127.0.0.1:${port}`
     try {
       activeBrowser = await chromium.connectOverCDP(endpoint)
       resolvedLaunchOptions = { channel: undefined }
