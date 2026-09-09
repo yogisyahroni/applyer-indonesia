@@ -40,6 +40,15 @@ export function createMainWindow(): BrowserWindow {
   window.on('ready-to-show', () => {
     window.show()
   })
+  // A renderer can be alive while waiting on a resource/native startup path and
+  // never emit ready-to-show. Do not leave the app as a background-only process.
+  const startupRevealTimer = setTimeout(() => {
+    if (!window.isDestroyed() && !window.isVisible()) {
+      appLogger.warn('Renderer did not become ready within 8 seconds; revealing the window for diagnostics.')
+      window.show()
+    }
+  }, 8_000)
+  window.once('closed', () => clearTimeout(startupRevealTimer))
   window.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
     appLogger.error(`Renderer failed to load (${errorCode}): ${errorDescription} - ${validatedURL}`)
     window.show()
