@@ -27,6 +27,11 @@
     "name": "Applyer",
     "version": "Version {{version}}",
     "dataDirectory": "Data directory:"
+    ,"checkUpdate": "Check for updates"
+    ,"checkingUpdate": "Checking for updates…"
+    ,"downloadUpdate": "Download version {{version}}"
+    ,"installUpdate": "Install and restart"
+    ,"upToDate": "Applyer is up to date."
   },
   "retryAll": {
     "title": "Retry all failed jobs?",

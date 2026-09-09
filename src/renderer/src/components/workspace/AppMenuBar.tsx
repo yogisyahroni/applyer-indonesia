@@ -1,4 +1,4 @@
-import { useState, type ReactElement } from 'react'
+import { useEffect, useState, type ReactElement } from 'react'
 import { useTranslation } from 'react-i18next'
 import Menu, { MenuBar, type MenuEntry } from '../ui/Menu'
 import Modal from '../ui/Modal'
@@ -49,7 +49,23 @@ export default function AppMenuBar({
   const [confirmRetryAllOpen, setConfirmRetryAllOpen] = useState(false)
   const [retryingAll, setRetryingAll] = useState(false)
   const [aboutOpen, setAboutOpen] = useState(false)
+  const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'available' | 'downloaded' | 'none' | 'error'>('idle')
+  const [updateVersion, setUpdateVersion] = useState<string | null>(null)
   const appInfo = useAppInfo()
+  useEffect(() => window.api.app.onUpdate((payload: any) => {
+    setUpdateStatus(payload.status === 'available' || payload.status === 'downloaded' ? payload.status : payload.status === 'none' ? 'none' : 'error')
+    setUpdateVersion(payload.version ?? null)
+  }), [])
+  const checkUpdate = async (): Promise<void> => {
+    setUpdateStatus('checking')
+    const result: any = await window.api.app.checkForUpdates()
+    setUpdateStatus(result.status === 'available' ? 'available' : result.status === 'none' ? 'none' : result.status === 'dev' ? 'none' : 'error')
+    setUpdateVersion(result.version ?? null)
+  }
+  const installUpdate = async (): Promise<void> => {
+    if (updateStatus === 'available') { await window.api.app.downloadUpdate(); return }
+    if (updateStatus === 'downloaded') await window.api.app.installUpdate()
+  }
 
   const shortcutLabel = (commandId: CommandId): string | undefined => {
     const combo = bindings[commandId]
@@ -166,7 +182,8 @@ export default function AppMenuBar({
   const helpItems: MenuEntry[] = [
     { type: 'action', key: 'shortcuts', label: t('menu.keyboardShortcuts'), onSelect: () => onOpenSettings('shortcuts') },
     { type: 'separator', key: 'sep' },
-    { type: 'action', key: 'about', label: t('menu.about'), onSelect: () => setAboutOpen(true) }
+    { type: 'action', key: 'about', label: t('menu.about'), onSelect: () => setAboutOpen(true) },
+    { type: 'action', key: 'checkUpdate', label: t('about.checkUpdate'), onSelect: checkUpdate }
   ]
 
   return (
@@ -201,6 +218,10 @@ export default function AppMenuBar({
               <span className="break-all text-text">{appInfo.userDataDir}</span>
             </span>
           )}
+          <button className="mt-3 rounded bg-accent px-3 py-1 text-[12px] text-white disabled:opacity-50" disabled={updateStatus === 'checking'} onClick={updateStatus === 'available' || updateStatus === 'downloaded' ? installUpdate : checkUpdate}>
+            {updateStatus === 'available' ? t('about.downloadUpdate', { version: updateVersion }) : updateStatus === 'downloaded' ? t('about.installUpdate') : updateStatus === 'checking' ? t('about.checkingUpdate') : t('about.checkUpdate')}
+          </button>
+          {updateStatus === 'none' && <span className="text-[12px] text-text-muted">{t('about.upToDate')}</span>}
         </div>
       </Modal>
     </div>

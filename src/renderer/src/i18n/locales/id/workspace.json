@@ -27,6 +27,11 @@
     "name": "Applyer",
     "version": "Versi {{version}}",
     "dataDirectory": "Direktori data:"
+    ,"checkUpdate": "Cek pembaruan"
+    ,"checkingUpdate": "Memeriksa pembaruan…"
+    ,"downloadUpdate": "Unduh versi {{version}}"
+    ,"installUpdate": "Pasang dan mulai ulang"
+    ,"upToDate": "Applyer sudah versi terbaru."
   },
   "retryAll": {
     "title": "Coba lagi semua lowongan yang gagal?",

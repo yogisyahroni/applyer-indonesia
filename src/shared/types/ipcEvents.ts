@@ -133,7 +133,11 @@ export const IPC = {
     import: 'data:import'
   },
   app: {
-    getInfo: 'app:getInfo'
+    getInfo: 'app:getInfo',
+    checkForUpdates: 'app:checkForUpdates',
+    downloadUpdate: 'app:downloadUpdate',
+    installUpdate: 'app:installUpdate',
+    onUpdate: 'app:update'
   },
   clipboard: {
     readText: 'clipboard:readText',
