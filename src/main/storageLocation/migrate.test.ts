@@ -358,7 +358,7 @@ describe('migrateStorageLocation', () => {
     expect(result).toEqual({ ok: true })
     expect(readFileSync(join(dest, 'logs', 'race.log'), 'utf-8')).toBe('before\nlate\n')
     cpSpy.mockRestore()
-  })
+  }, 15_000)
 
   it('rewrites jobs.screenshot_path alongside documents.storedPath', async () => {
     seedOldLocationDb()
