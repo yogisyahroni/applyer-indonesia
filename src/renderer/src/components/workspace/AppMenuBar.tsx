@@ -11,6 +11,8 @@ import { useJobsStore } from '../../state/jobsStore'
 import { useAppInfo } from '../../state/useAppInfo'
 import type { SectionId } from '../../pages/Settings/SettingsPage'
 
+type UpdateEvent = { status: 'available' | 'downloaded' | 'none' | 'error' | 'dev'; version?: string | null }
+
 /**
  * The app's VS Code-style menu row (File/Terminal/Jobs/View/Help), replacing
  * what used to be a single standalone `ViewMenu`. Each top-level entry is a
@@ -52,13 +54,14 @@ export default function AppMenuBar({
   const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'available' | 'downloaded' | 'none' | 'error'>('idle')
   const [updateVersion, setUpdateVersion] = useState<string | null>(null)
   const appInfo = useAppInfo()
-  useEffect(() => window.api.app.onUpdate((payload: any) => {
-    setUpdateStatus(payload.status === 'available' || payload.status === 'downloaded' ? payload.status : payload.status === 'none' ? 'none' : 'error')
-    setUpdateVersion(payload.version ?? null)
+  useEffect(() => window.api.app.onUpdate((payload: unknown) => {
+    const update = payload as UpdateEvent
+    setUpdateStatus(update.status === 'available' || update.status === 'downloaded' ? update.status : update.status === 'none' ? 'none' : 'error')
+    setUpdateVersion(update.version ?? null)
   }), [])
   const checkUpdate = async (): Promise<void> => {
     setUpdateStatus('checking')
-    const result: any = await window.api.app.checkForUpdates()
+    const result = await window.api.app.checkForUpdates() as UpdateEvent
     setUpdateStatus(result.status === 'available' ? 'available' : result.status === 'none' ? 'none' : result.status === 'dev' ? 'none' : 'error')
     setUpdateVersion(result.version ?? null)
   }
