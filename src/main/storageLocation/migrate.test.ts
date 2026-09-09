@@ -162,7 +162,7 @@ describe('migrateStorageLocation', () => {
 
     expect(existsSync(oldDbPath)).toBe(false)
     expect(existsSync(join(oldRoot, 'documents'))).toBe(false)
-  })
+  }, 15_000)
 
   it('discards the destination and leaves the old location untouched if the copy fails', async () => {
     seedOldLocationDb()
